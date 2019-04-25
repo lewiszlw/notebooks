@@ -49,7 +49,7 @@
 - [缓存](https://github.com/lewiszlw/notebooks/tree/master/system-design/cache)
 
 ## wheels - 造轮子
-- [ddd]()
+- [dcc - 分布式配置中心](https://github.com/lewiszlw/notebooks/tree/master/wheels/dcc)
 
 ## tools - 工具使用
 - [Maven]()
