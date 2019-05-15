@@ -152,7 +152,41 @@ HashMap实际上是一个“链表散列”的数据结构，即数组和链表�
 https://juejin.im/post/5ccd84dee51d456e3428c1af
 
 ## notify()和wait()为什么必须要放在同步块内
-这是Java设计者为了避免使用者出现lost wake up问题。
+这是Java设计者为了避免使用者出现lost wake up问题。因为wait方法是运行在等待线程里的，notify或者notifyAll是运行在通知线程里的。而执行wait方法前需要判断一下某个条件是否满足，如果不满足才会执行wait方法，这是一个先检查后执行的操作，不是一个原子性操作，多线程环境会出现问题。
 
 https://www.jianshu.com/p/b8073a6ce1c0
 
+## wait/notify机制
+`等待队列`：每一个锁都对应了一个等待队列，Wait 会挂起自己让出 CPU 时间片，并将自身加入锁定对象的 Wait Set 中，释放对象的监视器锁（monitor）让其他线程可以获得，直到其他线程调用此对象的 notify( ) 方法或 notifyAll( ) 方法，自身才能被唤醒（这里有个特殊情况就是 Wait 可以增加等待时间）；Notify 方法则会释放监视器锁的同时，唤醒对象 Wait Set 中等待的线程，顺序是随机的不确定。
+
+通用模式：
+```java
+// 等待线程
+synchronized (对象) {
+    while(条件不满足) {
+        对象.wait();
+    }
+}
+
+// 通知线程
+synchronized (对象) {
+    完成条件
+    对象.notifyAll();
+}
+```
+
+注意事项：
+1. 必须在同步代码块中调用wait、 notify或者notifyAll方法。
+2. 在同步代码块中，必须调用获取的锁对象的wait、 notify或者notifyAll方法。
+3. 在等待线程判断条件是否满足时，应该使用while，而不是if。
+4. 在调用完锁对象的notify或者notifyAll方法后，等待线程并不会立即从wait()方法返回，需要调用notify()或者notifyAll()的线程释放锁之后，等待线程才从wait()返回继续执行。
+5. notify方法只会将等待队列中的一个线程移出，而notifyAll方法会将等待队列中的所有线程移出。
+
+## wait和sleep区别
+1.wait是Object的成员方法，而sleep是Thread的静态方法。
+
+2.调用wait方法需要先获得锁，而调用sleep方法是不需要的。
+
+3.调用wait方法的线程需要用notify来唤醒，而sleep必须设置超时值。
+
+4.线程在调用wait方法之后会先释放锁，而sleep不会释放锁。
