@@ -22,7 +22,7 @@
 - [Python](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Python)
 
 ## distributed-knowledge - 分布式知识
-- [ZooKeeper]()
+- [ZooKeeper](https://github.com/lewiszlw/notebooks/blob/master/distributed-knowledge/ZooKeeper.pdf)
 
 ## middleware - 中间件
 - [消息中间件](https://github.com/lewiszlw/notebooks/tree/master/middleware/mq)
@@ -34,7 +34,7 @@
 - [MySQL](https://github.com/lewiszlw/notebooks/tree/master/storage/MySQL)
 
 ## linux - Linux系统知识
-- [Linux常用命令]()
+- [Linux常用命令](https://github.com/lewiszlw/notebooks/tree/master/linux)
 
 ## cs-basic-knowledge - 计算机基础知识
 - [操作系统](https://github.com/lewiszlw/notebooks/blob/master/cs-basic-knowledge/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md)
@@ -55,8 +55,9 @@
 - [Maven]()
 - [IDEA](https://github.com/lewiszlw/notebooks/tree/master/tools/IDEA)
 - [Git](https://github.com/lewiszlw/notebooks/tree/master/tools/Git)
-- [Vim]()
+- [Vim](https://github.com/lewiszlw/notebooks/blob/master/tools/Vim.pdf)
 - [Mac]()
+- [Docker]()
 
 ## others - 其他知识
-- [反向代理]()
+- [反向代理](https://github.com/lewiszlw/notebooks/blob/master/others/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86.pdf)
