@@ -149,6 +149,8 @@ HashMap实际上是一个“链表散列”的数据结构，即数组和链表�
 - 轻量级锁：如果偏向锁获取失败，那么会使用CAS自旋来完成，轻量级锁适用于线程交替进入临界区
 - 重量级锁：自旋失败之后，会采取重量级锁策略我们线程会阻塞挂起
 
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/synchronized%E5%8E%9F%E7%90%86.png)
+
 https://juejin.im/post/5ccd84dee51d456e3428c1af
 
 ## notify()和wait()为什么必须要放在同步块内
