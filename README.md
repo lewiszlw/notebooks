@@ -59,5 +59,14 @@
 - [Mac]()
 - [Docker]()
 
+## security - 安全知识
+- [安全知识]()
+
+## protocols - 协议
+- [Http协议]()
+
+## operations - 运维
+- [运维知识]()
+
 ## others - 其他知识
 - [反向代理](https://github.com/lewiszlw/notebooks/blob/master/others/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86.pdf)
