@@ -18,10 +18,10 @@
   - [Java基础](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java/Java%E5%9F%BA%E7%A1%80)
   - [Spring](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java/Spring)
   - [Mybatis](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java/Mybatis)
-  - [多线程](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java/%E5%A4%9A%E7%BA%BF%E7%A8%8B)
 - [Python](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Python)
 
 ## distributed-knowledge - 分布式知识
+- [分布式知识](https://github.com/lewiszlw/notebooks/blob/master/distributed-knowledge/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86.md)
 - [ZooKeeper](https://github.com/lewiszlw/notebooks/blob/master/distributed-knowledge/ZooKeeper.pdf)
 
 ## middleware - 中间件
@@ -32,6 +32,7 @@
 
 ## storage - 存储
 - [MySQL](https://github.com/lewiszlw/notebooks/tree/master/storage/MySQL)
+- [Redis](https://github.com/lewiszlw/notebooks/tree/master/storage/Redis)
 
 ## linux - Linux系统知识
 - [Linux常用命令](https://github.com/lewiszlw/notebooks/tree/master/linux)
@@ -41,7 +42,7 @@
 - [计算机组成原理](https://github.com/lewiszlw/notebooks/blob/master/cs-basic-knowledge/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86.md)
 - [计算机网络](https://github.com/lewiszlw/notebooks/blob/master/cs-basic-knowledge/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C.md)
 - [数据库](https://github.com/lewiszlw/notebooks/blob/master/cs-basic-knowledge/%E6%95%B0%E6%8D%AE%E5%BA%93.md)
-- [算法与数据结构]()
+- [算法与数据结构](https://github.com/lewiszlw/notebooks/blob/master/cs-basic-knowledge/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95.md)
 
 ## system-design - 系统设计
 - [领域驱动设计](https://github.com/lewiszlw/notebooks/tree/master/system-design/DDD)
@@ -50,23 +51,26 @@
 
 ## wheels - 造轮子
 - [dcc - 分布式配置中心](https://github.com/lewiszlw/notebooks/tree/master/wheels/dcc)
+- [red-envelope - 红包系统](https://github.com/lewiszlw/notebooks/tree/master/wheels/red-envelope)
+- [sso - 单点登录](https://github.com/lewiszlw/notebooks/tree/master/wheels/sso)
 
 ## tools - 工具使用
-- [Maven]()
+- [Maven](https://github.com/lewiszlw/notebooks/blob/master/tools/Maven%E4%BD%BF%E7%94%A8.md)
 - [IDEA](https://github.com/lewiszlw/notebooks/tree/master/tools/IDEA)
 - [Git](https://github.com/lewiszlw/notebooks/tree/master/tools/Git)
 - [Vim](https://github.com/lewiszlw/notebooks/blob/master/tools/Vim.pdf)
-- [Mac]()
-- [Docker]()
+- [Mac](https://github.com/lewiszlw/notebooks/blob/master/tools/Mac%E4%BD%BF%E7%94%A8.md)
+- [Docker](https://github.com/lewiszlw/notebooks/blob/master/tools/Docker.pdf)
 
 ## security - 安全知识
-- [安全知识]()
+- [安全知识](https://github.com/lewiszlw/notebooks/blob/master/security/%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.md)
 
 ## protocols - 协议
-- [Http协议]()
+- [Http协议](https://github.com/lewiszlw/notebooks/blob/master/protocols/http%E5%8D%8F%E8%AE%AE.md)
 
 ## operations - 运维
-- [运维知识]()
+- [运维知识](https://github.com/lewiszlw/notebooks/blob/master/operations/%E8%BF%90%E7%BB%B4%E7%9F%A5%E8%AF%86.md)
 
 ## others - 其他知识
 - [反向代理](https://github.com/lewiszlw/notebooks/blob/master/others/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86.pdf)
+- [JMockit使用](https://github.com/lewiszlw/notebooks/blob/master/others/JMockit.pdf)
