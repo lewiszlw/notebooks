@@ -69,7 +69,7 @@ null
 
 **双亲委派模型的好处**：
 1. 避免重复加载
-2. 保证java核心库的安全性
+2. 保证java核心库安全性
 
 采用双亲委派模型的是好处是Java类随着它的类加载器一起具备了一种带有优先级的层次关系，通过这种层级关可以避免类的重复加载，当父亲已经加载了该类时，就没有必要子ClassLoader再加载一次。其次是考虑到安全因素，java核心api中定义类型不会被随意替换，假设通过网络传递一个名为java.lang.Integer的类，通过双亲委派模型传递到启动类加载器，而启动类加载器在核心java API发现这个名字的类，发现该类已被加载，并不会重新加载网络传递的过来的java.lang.Integer，而直接返回已加载过的Integer.class，这样便可以防止核心API库被随意篡改。可能你会想，如果我们在classpath路径下自定义一个名为java.lang.SingleInterge类呢？该类并不存在java.lang中，经过双亲委派模型，传递到启动类加载器中，由于父类加载器路径下并没有该类，所以不会加载，将反向委托给子类加载器加载，最终会通过系统类加载器加载该类。但是这样做是不允许，因为java.lang是核心API包，需要访问权限，强制加载将会报出java.lang.SecurityException: Prohibited package name: java.lang。所以无论如何都无法加载成功的。
 

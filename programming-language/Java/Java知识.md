@@ -268,3 +268,18 @@ CAS存在一个很明显的问题，即ABA问题：如果变量V初次读取的�
 
 **CGlib 和 JDK 动态代理区别**
 CGlib 不能代理 final 类，因为 final 类没有子类，JDK 动态代理需要实现指定接口。
+
+# ThreadPoolExecutor线程池处理流程
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/ThreadPoolExecutor%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png)
+
+处理流程：
+1. 当workerCount < corePoolSize，创建线程执行任务。
+2. 当workerCount >= corePoolSize&&阻塞队列workQueue未满，把新的任务放入阻塞队列。
+3. 当workQueue已满，并且workerCount >= corePoolSize，并且workerCount < maximumPoolSize，创建线程执行任务。
+4. 当workQueue已满，workerCount >= maximumPoolSize，采取拒绝策略,默认拒绝策略是直接抛异常。
+
+**拒绝策略**
+1. DiscardPolicy：直接丢弃
+2. DiscardOldestPolicy：丢弃队列中最老的任务
+3. AbortPolicy：抛异常
+4. CallerRunsPolicy：将任务分给调用线程来执行
