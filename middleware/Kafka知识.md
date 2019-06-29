@@ -21,7 +21,7 @@ partition 物理上由多个 segment 文件组成，每个 segment 大小相等�
 
 **数据文件索引(分段索引、稀疏存储)**
 
-Kafka 为每个分段后的数据文件建立了索引文件，文件名与数据文件的名字是一样的，只是文件扩 展名为.index。index 文件中并没有为数据文件中的每条 Message 建立索引，而是采用了稀疏存储的方式，每隔一定字节的数据建立一条索引。这样避免了索引文件占用过多的空间，从而可以将索引文件保留在内存中。
+Kafka 为每个分段后的数据文件建立了索引文件，文件名与数据文件的名字是一样的，只是文件扩展名为.index。index 文件中并没有为数据文件中的每条 Message 建立索引，而是采用了稀疏存储的方式，每隔一定字节的数据建立一条索引。这样避免了索引文件占用过多的空间，从而可以将索引文件保留在内存中。
 
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/middleware/Kafka%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E7%B4%A2%E5%BC%95.png)
 

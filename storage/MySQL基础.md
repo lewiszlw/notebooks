@@ -166,9 +166,24 @@ SELECT * from TABLE where id = 1  lock in share mode;
 事务完成后，它对数据库的修改被永久保持，事务日志能够保持事务的永久性。
 
 # 聚簇索引和非聚簇索引
-聚簇索引的叶子节点就是数据节点，而非聚簇索引的叶子节点仍然是索引节点，只不过有指向对应数据块的指针。
 
-聚簇索引的顺序就是数据的物理存储顺序，非聚簇索引的索引顺序与数据物理排列顺序无关。
+**非聚簇索引**
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/%E9%9D%9E%E8%81%9A%E9%9B%86(%E7%B0%87)%E7%B4%A2%E5%BC%95.png)
+
+索引文件仅保存数据记录的地址。
+
+**聚簇索引**
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/%E8%81%9A%E9%9B%86(%E7%B0%87)%E7%B4%A2%E5%BC%95.png)
+
+表数据文件本身就是按B+Tree组织的一个索引结构，这棵树的叶节点data域保存了完整的数据记录。因此表数据文件本身就是主索引。
+
+所以InnoDB要求表必须有主键（MyISAM可以没有），如果没有显式指定，则MySQL系统会自动选择一个可以唯一标识数据记录的列作为主键，如果不存在这种列，则MySQL自动为InnoDB表生成一个隐含字段作为主键，这个字段长度为6个字节，类型为长整形。
+
+**聚簇索引和非聚簇索引区别：**
+- 聚簇索引的叶子节点就是数据节点，而非聚簇索引的叶子节点仍然是索引节点，只不过有指向对应数据块的指针。
+- 聚簇索引的顺序就是数据的物理存储顺序，非聚簇索引的索引顺序与数据物理排列顺序无关。
 
 # B 树 (B-tree) 和 B+ 树
 **B树（B-tree）**
@@ -197,4 +212,53 @@ SELECT * from TABLE where id = 1  lock in share mode;
 **B+树相对于B树优点**：
 1. B树在提高了IO性能的同时并没有解决元素遍历的我效率低下的问题，正是为了解决这个问题，B+树应用而生。B+树只需要去遍历叶子节点就可以实现整棵树的遍历。而且在数据库中基于范围的查询是非常频繁的，而B树不支持这样的操作或者说效率太低。
 2. B+树更适合外部存储，由于内节点无 data 域，一个结点可以存储更多的内结点，每个节点能索引的范围更大更精确，也意味着 B+树单次磁盘IO的信息量大于B树，I/O效率更高。
+
+# 字符串数据类型
+| MySQL数据类型	| 含义 |
+|--------------|-----|
+| char(n)	| 固定长度，最多2^8−1个字符，2^8−1个字节 | 
+| varchar(n)	| 可变长度，最多2^16−1个字符，2^16−1个字节 |
+| tinytext	| 可变长度，最多2^8−1个字符，2^8−1个字节 |
+| text	| 可变长度，最多2^16−1个字符，2^16−1个字节 |
+| mediumtext	| 可变长度，最多2^24−1个字符，2^24−1个字节 |
+| longtext	| 可变长度，最多2^32−1个字符，2^32−1个字节 |
+
+**varchar和char区别**
+- varchar是可变长度，每个值只占用刚好够用的字节再加上一个用来记录其长度的字节；
+- char是固定长度，长度不足的话会在它的右边用空格字符补足。
+
+# 最左匹配原则
+MySQL 在建立联合索引时会遵循最左前缀匹配的原则，即最左优先，在检索数据时从联合索引的最左边开始匹配。
+
+```sql
+KEY test_col1_col2_col3 on test(col1,col2,col3);
+```
+
+联合索引 test_col1_col2_col3 实际建立了(col1)、(col1,col2)、(col,col2,col3)三个索引。
+
+```sql
+SELECT * FROM test WHERE col1=“1” AND clo2=“2” AND clo4=“4”
+```
+
+上面这个查询语句执行时会依照最左前缀匹配原则，检索时会使用索引(col1,col2)进行数据匹配。
+
+**ps.**
+
+1.索引的字段可以是任意顺序的
+```sql
+SELECT * FROM test WHERE col1=“1” AND clo2=“2”
+SELECT * FROM test WHERE col2=“2” AND clo1=“1”
+```
+这两个查询语句都会用到索引(col1,col2)，mysql创建联合索引的规则是首先会对联合合索引的最左边的，也就是第一个字段col1的数据进行排序，在第一个字段的排序基础上，然后再对后面第二个字段col2进行排序。
+
+2.查询语句SELECT * FROM test WHERE col2=2;也能触发索引
+```sql
+EXPLAIN SELECT * FROM test WHERE col2=2;   // type: index
+EXPLAIN SELECT * FROM test WHERE col1=1;   // type: ref
+```
+
+**联合索引优点**
+- 减少开销。建一个联合索引(col1,col2,col3)，实际相当于建了(col1),(col1,col2),(col1,col2,col3)三个索引。每多一个索引，都会增加写操作的开销和磁盘空间的开销。对于大量数据的表，使用联合索引会大大的减少开销！
+- 覆盖索引。对联合索引(col1,col2,col3)，如果有如下的sql: select col1,col2,col3 from test where col1=1 and col2=2。那么MySQL可以直接通过遍历索引取得数据，而无需回表，这减少了很多的随机io操作。
+- 效率高。索引列越多，通过索引筛选出的数据越少。有1000W条数据的表，有如下sql:select from table where col1=1 and col2=2 and col3=3,假设假设每个条件可以筛选出10%的数据，如果只有单值索引，那么通过该索引能筛选出1000W \*10%=100w条数据，然后再回表从100w条数据中找到符合col2=2 and col3= 3的数据，然后再排序，再分页；如果是联合索引，通过索引筛选出1000w \*10% \*10% \*10%=1w，效率提升可想而知！
 

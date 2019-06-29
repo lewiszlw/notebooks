@@ -50,14 +50,19 @@ Error类一般是指与虚拟机相关的问题，如系统崩溃，虚拟机错
 
 是否需要显示catch
 
+# 注解
+**作用**
+1. 生成文档：@see、@param
+2. 替代配置文件
+3. 编译检查：@Override
+
 # IO
 
 ## Reader和Inputstream区别
 
 Reader用于读取字符流，InputStream用于读取字节流。Reader读取出来的是char数组或者String字符串，InputStream读取出来的是byte数组。
 
-# 集合类
-
+# HashMap
 ## HashMap和Hashtable的区别
 
 1.安全性
@@ -115,17 +120,72 @@ HashMap实际上是一个“链表散列”的数据结构，即数组和链表�
 
 2.判断对象是否相同
 
-# 多线程
+# ConcurrentHashMap
+**JDK 1.7**
 
-## 线程实现方式
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JDK1.7ConcurrentHashMap%E7%BB%93%E6%9E%84.png)
 
-1.继承Thread
+由 Segment 数组、HashEntry 组成
+```
+/**
+ * Segment 数组，存放数据时首先需要定位到具体的 Segment 中。
+ */
+final Segment<K,V>[] segments;
 
-2.实现Runable
+static final class Segment<K,V> extends ReentrantLock implements Serializable {
+       private static final long serialVersionUID = 2249069246763182397L;
+       
+       // 和 HashMap 中的 HashEntry 作用一样，真正存放数据的桶
+       transient volatile HashEntry<K,V>[] table;
+       transient int count;
+       transient int modCount;
+       transient int threshold;
+       final float loadFactor;
+       
+}
+```
 
-3.实现Callable
+put方法流程：
+1. 将当前 Segment 中的 table 通过 key 的 hashcode 定位到 HashEntry。
+2. 遍历该 HashEntry，如果不为空则判断传入的 key 和当前遍历的 key 是否相等，相等则覆盖旧的 value。
+3. 不为空则需要新建一个 HashEntry 并加入到 Segment 中，同时会先判断是否需要扩容。
+4. 最后会解除在 1 中所获取当前 Segment 的锁。
 
-## volatile关键字作用
+get方法流程：
+- 只需要将 Key 通过 Hash 之后定位到具体的 Segment ，再通过一次 Hash 定位到具体的元素上。
+
+**JDK 1.8**
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JDK1.8ConcurrentHashMap%E7%BB%93%E6%9E%84.png)
+
+抛弃了原有的 Segment 分段锁，而采用了 CAS + synchronized 来保证并发安全性。底层由“数组”+链表+红黑树来实现的。
+
+Segment虽保留，但已经简化属性，仅仅是为了兼容旧版本。
+
+```
+/**
+ * The array of bins. Lazily initialized upon first insertion.
+ * Size is always a power of two. Accessed directly by iterators.
+ */
+transient volatile Node<K,V>[] table;
+```
+
+put方法流程：
+1. 检查key/value是否为空，如果为空，则抛异常，否则进行2
+2. 进入for死循环，进行3
+3. 检查table是否初始化了，如果没有，则调用initTable()进行初始化然后进行 2，否则进行4
+4. 根据key的hash值计算出其应该在table中储存的位置i，取出table[i]的节点用f表示。
+    - 如果table[i]==null(即该位置的节点为空，没有发生碰撞)，则利用CAS操作直接存储在该位置，如果CAS操作成功则退出死循环。
+    - 如果table[i]!=null(即该位置已经有其它节点，发生碰撞)，碰撞处理也有两种情况
+        - 检查table[i]的节点的hash是否等于MOVED，如果等于，则检测到正在扩容，则帮助其扩容
+        - 说明table[i]的节点的hash值不等于MOVED，如果table[i]为链表节点，则将此节点插入链表中即可，如果table[i]为树节点，则将此节点插入树中即可。插入成功后，进行 5
+5. 如果table[i]的节点是链表节点，则检查table的第i个位置的链表是否需要转化为数，如果需要则调用treeifyBin函数进行转化
+
+get方法：
+- 根据key的hash值找到其在table所对应的位置i,然后在table[i]位置所存储的链表(或者是树)进行查找是否有键为key的节点，如果有，则返回节点对应的value，否则返回null。
+
+# volatile
+
 **1.内存可见性**
 
 当对非volatile变量进行读写的时候，每个线程先从主内存拷贝变量到CPU缓存中，如果计算机有多个CPU，每个线程可能在不同的CPU上被处理，这意味着每个线程可以拷贝到不同的CPU cache中。 
@@ -142,17 +202,15 @@ volatile关键字提供内存屏障的方式来防止指令被重排，编译器
 3. 在每个volatile读操作的前面插入一个LoadLoad屏障；
 4. 在每个volatile读操作的后面插入一个LoadStore屏障。
 
-## synchronized关键字作用
+# synchronized
 
-1.锁类对象：类的所有实例
+**synchronized关键字作用**
+1. 锁类对象：类的所有实例
+2. 锁对象：该对象
+3. 修饰静态方法：类的所有实例
+4. 修饰非静态方法：该对象
 
-2.锁对象：该对象
-
-3.修饰静态方法：类的所有实例
-
-4.修饰非静态方法：该对象
-
-## synchronized锁膨胀
+**synchronized锁膨胀**
 - 偏向锁：顾名思义偏向某个线程的锁，适用于某个线程能长期获取到该锁（如果A线程第一次获得锁，那么锁就进入偏向模式，MarkWord的结构也变成偏向锁结构，如果没有其他线程和A线程竞争，A线程再次请求该锁时，无需任何同步操作。也就是说当一个线程访问同步块并且获取锁的时候，会通过CAS操作在对象头的偏向锁结构里记录线程的ID，如果记录成功，线程在进入和退出同步块时，不需要进行CAS操作来加锁和解锁，从而提高程序的性能。）
 - 轻量级锁：如果偏向锁获取失败，那么会使用CAS自旋来完成，轻量级锁适用于线程交替进入临界区
 - 重量级锁：自旋失败之后，会采取重量级锁策略我们线程会阻塞挂起
@@ -161,7 +219,16 @@ volatile关键字提供内存屏障的方式来防止指令被重排，编译器
 
 https://juejin.im/post/5ccd84dee51d456e3428c1af
 
-## happens-before规则
+**synchronized重入性**
+
+每个对象有一个监视器锁（monitor）。当monitor被占用时就会处于锁定状态，线程执行monitorenter指令时尝试获取monitor的所有权，过程如下：
+1. 如果monitor的进入数为0，则该线程进入monitor，然后将进入数设置为1，该线程即为monitor的所有者。
+2. 如果线程已经占有该monitor，只是重新进入，则进入monitor的进入数加1.
+3. 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到monitor的进入数为0，再重新尝试获取monitor的所有权。
+
+执行monitorexit的线程必须是objectref所对应的monitor的所有者。指令执行时，monitor的进入数减1，如果减1后进入数为0，那线程退出monitor，不再是这个monitor的所有者。其他被这个monitor阻塞的线程可以尝试去获取这个 monitor 的所有权。
+
+# happens-before规则
 **定义**：
 
 1）如果一个操作happens-before另一个操作，那么第一个操作的执行结果将对第二个操作可见，而且第一个操作的执行顺序排在第二个操作之前。
@@ -178,12 +245,7 @@ https://juejin.im/post/5ccd84dee51d456e3428c1af
 7. 程序中断规则：对线程interrupted()方法的调用先行于被中断线程的代码检测到中断时间的发生。
 8. 对象finalize规则：一个对象的初始化完成（构造函数执行结束）先行于发生它的finalize()方法的开始。
 
-## notify()和wait()为什么必须要放在同步块内
-这是Java设计者为了避免使用者出现lost wake up问题。因为wait方法是运行在等待线程里的，notify或者notifyAll是运行在通知线程里的。而执行wait方法前需要判断一下某个条件是否满足，如果不满足才会执行wait方法，这是一个先检查后执行的操作，不是一个原子性操作，多线程环境会出现问题。
-
-https://www.jianshu.com/p/b8073a6ce1c0
-
-## wait/notify机制
+# wait/notify
 `等待队列`：每一个锁都对应了一个等待队列，Wait 会挂起自己让出 CPU 时间片，并将自身加入锁定对象的 Wait Set 中，释放对象的监视器锁（monitor）让其他线程可以获得，直到其他线程调用此对象的 notify( ) 方法或 notifyAll( ) 方法，自身才能被唤醒（这里有个特殊情况就是 Wait 可以增加等待时间）；Notify 方法则会释放监视器锁的同时，唤醒对象 Wait Set 中等待的线程，顺序是随机的不确定。
 
 通用模式：
@@ -209,14 +271,22 @@ synchronized (对象) {
 4. 在调用完锁对象的notify或者notifyAll方法后，等待线程并不会立即从wait()方法返回，需要调用notify()或者notifyAll()的线程释放锁之后，等待线程才从wait()返回继续执行。
 5. notify方法只会将等待队列中的一个线程移出，而notifyAll方法会将等待队列中的所有线程移出。
 
-## wait和sleep区别
-1.wait是Object的成员方法，而sleep是Thread的静态方法。
+**wait和sleep区别**
+1. wait是Object的成员方法，而sleep是Thread的静态方法。
+2. 调用wait方法需要先获得锁，而调用sleep方法是不需要的。
+3. 调用wait方法的线程需要用notify来唤醒，而sleep必须设置超时值。
+4. 线程在调用wait方法之后会先释放锁，而sleep不会释放锁。
 
-2.调用wait方法需要先获得锁，而调用sleep方法是不需要的。
+**notify()和wait()为什么必须要放在同步块内**
 
-3.调用wait方法的线程需要用notify来唤醒，而sleep必须设置超时值。
+这是Java设计者为了避免使用者出现lost wake up问题。因为wait方法是运行在等待线程里的，notify或者notifyAll是运行在通知线程里的。而执行wait方法前需要判断一下某个条件是否满足，如果不满足才会执行wait方法，这是一个先检查后执行的操作，不是一个原子性操作，多线程环境会出现问题。
 
-4.线程在调用wait方法之后会先释放锁，而sleep不会释放锁。
+https://www.jianshu.com/p/b8073a6ce1c0
+
+# 线程实现方式
+1. 继承Thread
+2. 实现Runable
+3. 实现Callable
 
 # 线程生命周期(状态)
 **1.新建状态（NEW）**
@@ -253,6 +323,25 @@ Java实现：调用Unsafe包的Native方法 compareAndSwapObject/compareAndSwapI
 CAS存在一个很明显的问题，即ABA问题：如果变量V初次读取的时候是A，并且在准备赋值的时候检查到它仍然是A，那能说明它的值没有被其他线程修改过了吗？
 
 针对这种情况，java并发包中提供了一个带有标记的原子引用类AtomicStampedReference，它可以通过控制变量值的版本来保证CAS的正确性。
+
+# ReentrantLock
+**重入性原理**
+
+获取锁：如果该锁未被任何线程占有，该锁能被当前线程获取；若被占有，检查占有线程是否是当前线程，是的话再次获取，state计数加一。
+
+释放锁：state同步状态减1；只有当同步状态为0时，锁成功被释放，返回true，否则返回false。
+
+**公平锁 和 非公平锁**
+
+区别和共性：
+1. 非公平锁在调用 lock 后，首先就会调用 CAS 进行一次抢锁，如果这个时候恰巧锁没有被占用，那么直接就获取到锁返回了。
+2. 非公平锁在 CAS 失败后，和公平锁一样都会进入到 tryAcquire 方法，在 tryAcquire 方法中，如果发现锁这个时候被释放了（state == 0），非公平锁会直接 CAS 抢锁，但是公平锁会判断等待队列是否有线程处于等待状态，如果有则不去抢锁。
+3. 非公平锁如果两次 CAS 都不成功，那么后面非公平锁和公平锁是一样的，都要进入到阻塞队列等待唤醒。
+
+
+优缺点：
+1. 公平锁每次获取到锁为同步队列中的第一个节点，保证请求资源时间上的绝对顺序，而非公平锁有可能刚释放锁的线程下次继续获取该锁，则有可能导致其他线程永远无法获取到锁，造成“饥饿”现象。
+2. 公平锁为了保证时间上的绝对顺序，需要频繁的上下文切换，而非公平锁会降低一定的上下文切换，降低性能开销。因此，ReentrantLock默认选择的是非公平锁，则是为了减少一部分上下文切换，保证了系统更大的吞吐量。
 
 # 动态代理和静态代理
 动态代理类的源码是在程序运行期间由JVM根据反射等机制动态的生成，所以不存在代理类的字节码文件。代理类和委托类的关系是在程序运行时确定。
