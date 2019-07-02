@@ -34,9 +34,9 @@ String中的对象是不可变的，也就可以理解为常量，线程安全�
 
 每次对String 类型进行改变的时候，都会生成一个新的String 对象，然后将指针指向新的String 对象，性能较差。StringBuffer每次都会对StringBuffer 对象本身进行操作，而不是生成新的对象并改变对象引用。相同情况下使用StirngBuilder 相比使用StringBuffer 能获得10%~15% 左右的性能提升。
 
-## String s = “123”;这个语句有几个对象产生
-
-如果常量池已存在"123"，则直接s指向"123"即可，无需新生成字符串；如果常量池没有，则需要生成一个字符串"123"放到常量池。
+# equals方法实现
+- 覆写equals方法的时候，也必须覆写hashcode方法（主要用于Map之类的接口，利用hashcode方法来计算存储位置，所以当两个对象equals比较相同，即为同一对象，如果hashcode不一样，会判定为不同对象，产生矛盾）；
+- 编写equals方法后，检查是否符合：对称性、传递性、一致性、自反性和非空性
 
 # 异常处理
 
@@ -289,6 +289,8 @@ https://www.jianshu.com/p/b8073a6ce1c0
 3. 实现Callable
 
 # 线程生命周期(状态)
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81%E6%B5%81%E8%BD%AC.jpg)
+
 **1.新建状态（NEW）**
 
 当程序使用 new 关键字创建了一个线程之后，该线程就处于新建状态。
@@ -309,9 +311,19 @@ https://www.jianshu.com/p/b8073a6ce1c0
 2. 同步阻塞(lock->锁池)：运行(running)的线程在获取对象的同步锁时，若该同步锁被别的线程占用，则 JVM 会把该线程放入锁池(lock pool)中。
 3. 其他阻塞(sleep/join)：运行(running)的线程执行Thread.sleep(long ms)或 t.join()方法，或者发出了 I/O 请求时，JVM 会把该线程置为阻塞状态。当 sleep()状态超时、join()等待线程终止或者超时、或者 I/O处理完毕时，线程重新转入可运行(runnable)状态。
 
+- Waiting（等待）：Object.wait方法、Thread.join方法、java.util.concurrent库中的Lock或Condition时
+- Timed waiting（计时等待）：Object.wait、Thread.join、Lock.tryLock和Condition.await等方法有超时参数，还有Thread.sleep方法、LockSupport.parkNanos方法和LockSupport.parkUntil方法
+
 **5.线程死亡（DEAD）**
 
 正常结束、异常结束、调用 stop（不推荐）。
+
+**WAITING 和 BLOCKED 状态**
+
+BLOCKED是指线程正在等待获取锁；WAITING是指线程正在等待其他线程发来通知（notify），收到通知后进入BLOCKED状态，获取锁之后才能恢复执行。
+
+# 线程间通信方式
+- JVM提供的API：如wait方法、notify方法和notifyAll方法
 
 # CAS机制
 CAS (Compare And Set)：一个当前内存值V、旧的预期值A、即将更新的值B，当且仅当预期值A和内存值V相同时，将内存值修改为B并返回true，否则什么都不做，并返回false。
