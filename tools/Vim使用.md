@@ -1,0 +1,1 @@
+vim粘贴`:set paste`，关闭粘贴`:set nopaste`
