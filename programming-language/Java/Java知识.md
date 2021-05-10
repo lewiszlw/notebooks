@@ -256,7 +256,7 @@ https://juejin.im/post/5ccd84dee51d456e3428c1af
 对象分为三块区域: 对象头、实例数据和对齐填充。
 
 **对象头**
-对象头包含两部分，第一部分是Mark Word，用于存储对象自身的运行时数据，如哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程 ID、偏向时间戳等等，这一部分占一个字节。
+第一部分是Mark Word，用于存储对象自身的运行时数据，如哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程 ID、偏向时间戳等等，这一部分占一个字节。
 ![MarkWord](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/MarkWord.png)
 
 第二部分是Klass Pointer（类型指针），是对象指向它的类元数据的指针，虚拟机通过这个指针来确定这个对象是哪个类的实例，这部分也占一个字节。(如果对象是数组类型的，则需要3个字节来存储对象头，因为还需要一个字节存储数组的长度)
@@ -438,6 +438,10 @@ Java从1.5开始JDK提供了AtomicReference类来保证引用对象之间的原�
 # 乐观锁和悲观锁实现
 乐观锁：CAS、
 悲观锁：传统数据库行锁，表锁等，读锁，写锁等，Synchronized 和 ReentrantLock等。
+
+# JUC
+![MarkWord](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JUC.png)
+
 
 # 动态代理和静态代理
 动态代理类的源码是在程序运行期间由JVM根据反射等机制动态的生成，所以不存在代理类的字节码文件。代理类和委托类的关系是在程序运行时确定。
