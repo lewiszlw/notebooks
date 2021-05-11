@@ -137,6 +137,56 @@ HashMap实际上是一个“链表散列”的数据结构，即数组和链表�
 
 2.判断对象是否相同
 
+## HashMap中链表和红黑树转化
+```
+    /**
+     * The bin count threshold for using a tree rather than list for a
+     * bin.  Bins are converted to trees when adding an element to a
+     * bin with at least this many nodes. The value must be greater
+     * than 2 and should be at least 8 to mesh with assumptions in
+     * tree removal about conversion back to plain bins upon
+     * shrinkage.
+     */
+    static final int TREEIFY_THRESHOLD = 8;
+
+    /**
+     * The bin count threshold for untreeifying a (split) bin during a
+     * resize operation. Should be less than TREEIFY_THRESHOLD, and at
+     * most 6 to mesh with shrinkage detection under removal.
+     */
+    static final int UNTREEIFY_THRESHOLD = 6;
+
+    /**
+     * The smallest table capacity for which bins may be treeified.
+     * (Otherwise the table is resized if too many nodes in a bin.)
+     * Should be at least 4 * TREEIFY_THRESHOLD to avoid conflicts
+     * between resizing and treeification thresholds.
+     */
+    static final int MIN_TREEIFY_CAPACITY = 64;
+```
+当链表长度大于等于8但table长度小于64时，会进行数组扩容；当链表长度大于等于8并且table长度大于等于64时，会将该链表转化成红黑树；在resize扩容时，如果链表长度小于等于6，会退化成链表。
+
+**为什么链表长度大于等于8时转化成红黑树**
+利用泊松分布分析，达到8个元素的时候，概率已经很低了，此时树化，性价比会很高。
+
+红黑树特点：自平衡，高度低，查询速度快。
+
+## HashMap代码分析示例
+```
+HashMap<String,Integer> map = new HashMap(5);  // 堆里面创建一个对象，Node<K,V>[] table初始容量为第一个大于等于initialCapacity的2的幂，如果不传initialCapacity则默认16
+map.put("a",1);   // table[1]=Node("a"->1)
+map.put("b",2);   // table[2]=Node("b"->2)
+map.put("c",3);   // table[3]=Node("c"->3)
+map.put("d",4);   // table[4]=Node("d"->4)
+map.put("e",5);   // table[5]=Node("e"->5)
+map.put("a",5);   // table[1]=Node("a"->5)，更改key为"a"的Node的val（==或者equals）
+map.put("f",10);  // table[6]=Node("f"->10)
+map.put("g",11);  // table扩容至16，table[7]=Node("g"->11)，其他索引位置未变（Hashmap中的元素个数超过table数组大小*loadFactor时，就会进行2倍数组扩容）
+map.put("h",12);  // table[8]=Node("h"->12)
+map.put("aa",13); // table[0]=Node("aa"->13)
+map.put("bb",14); // table[0].next=Node("bb",14)，链表
+```
+
 # ConcurrentHashMap
 **JDK 1.7**
 
@@ -385,6 +435,12 @@ CAS (Compare And Set)：一个当前内存值V、旧的预期值A、即将更新
 
 Java实现：调用Unsafe包的Native方法 compareAndSwapObject/compareAndSwapInt/compareAndSwapLong。Unsafe 的cas 依赖了的是 jvm 针对不同的操作系统实现的 Atomic::cmpxchg，Atomic::cmpxchg 的实现使用了汇编的 cas 操作，并使用 cpu 硬件提供的 lock信号保证其原子性
 
+缺点
+**ABA问题**，我认为 V的值为A，有其它线程在这期间修改了值为B，但它又修改成了A，那么CAS只是对比最终结果和预期值，就检测不出是否修改过。
+
+改进
+通过版本号的机制来解决，如AtomicStampedReference。
+
 **存在问题**
 - **ABA问题**：如果变量V初次读取的时候是A，并且在准备赋值的时候检查到它仍然是A，那能说明它的值没有被其他线程修改过了吗？
 针对这种情况，java并发包中提供了一个带有标记的原子引用类AtomicStampedReference，它可以通过控制变量值的版本来保证CAS的正确性。
@@ -439,8 +495,18 @@ Java从1.5开始JDK提供了AtomicReference类来保证引用对象之间的原�
 乐观锁：CAS、
 悲观锁：传统数据库行锁，表锁等，读锁，写锁等，Synchronized 和 ReentrantLock等。
 
-# JUC
-![MarkWord](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JUC.png)
+# 共享锁和排他锁（读锁和写锁）
+**共享锁**
+获取共享锁后，其它线程也可以获取共享锁完成读操作，但都不能修改删除数据
+
+**排他锁**
+获取锁后，既能读又能写，但是此时其它线程不能获取这个锁了，只能由当前线程修改数据独享锁
+
+举例
+ReentrantReadWriteLock，适合读多写少，提高并发效率。
+
+# JUC总结
+![JUC](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JUC.png)
 
 
 # 动态代理和静态代理
@@ -479,3 +545,6 @@ keepAliveTime是指当线程池中线程数量大于corePollSize时，此时存�
 Java核心线程池的回收由allowCoreThreadTimeOut参数控制，默认为false，若开启为true，则此时线程池中不论核心线程还是非核心线程，只要其空闲时间达到keepAliveTime都会被回收。
 （但如果这样就违背了线程池的初衷（减少线程创建和开销），所以默认该参数为false）
 
+线程池关闭
+- shutdown 通知有序停止，先前提交的任务务会执行
+- shutdownNow 尝试立即停止，忽略队列里等待的任务，方法返回未执行过的tasks
