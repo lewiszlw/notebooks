@@ -51,3 +51,16 @@ Producer 端可以通过 GZIP 或 Snappy 格式对消息集合进行压缩。Pro
 
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/middleware/Kafka%E9%9B%B6%E6%8B%B7%E8%B4%9D1.png)
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/middleware/Kafka%E9%9B%B6%E6%8B%B7%E8%B4%9D2.png)
+
+# Kafka再平衡机制
+再平衡是指在kafka consumer所订阅的topic发生变化时发生的一种分区重分配机制。
+
+哪些情况触发再平衡
+- consumer group中的新增或删除某个consumer，导致其所消费的分区需要分配到组内其他的consumer上；
+- consumer订阅的topic发生变化，比如订阅的topic采用的是正则表达式的形式，如test-*此时如果有一个新建了一个topic test-user，那么这个topic的所有分区也是会自动分配给当前的consumer的，此时就会发生再平衡；
+- consumer所订阅的topic发生了新增分区的行为，那么新增的分区就会分配给当前的consumer，此时就会触发再平衡。
+
+再平衡策略主要有三种：Round Robin，Range和Sticky，默认使用的是Range。这三种分配策略的主要区别在于：
+- Round Robin：会采用轮询的方式将当前所有的分区依次分配给所有的consumer；
+- Range：首先会计算每个consumer可以消费的分区个数，然后按照顺序将指定个数范围的分区分配给各个consumer；
+- Sticky：这种分区策略是最新版本中新增的一种策略，其主要实现了两个目的：将现有的分区尽可能均衡的分配给各个consumer，存在此目的的原因在于Round Robin和Range分配策略实际上都会导致某几个consumer承载过多的分区，从而导致消费压力不均衡；如果发生再平衡，那么重新分配之后在前一点的基础上会尽力保证当前未宕机的consumer所消费的分区不会被分配给其他的consumer上；
