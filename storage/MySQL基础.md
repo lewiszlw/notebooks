@@ -130,9 +130,13 @@ SELECT * from TABLE where id = 1  lock in share mode;
 
 **3.Repeatable read 重复读**
 
+InnoDB 默认隔离级别。
+
 解决：脏读、不可重复读
 
 **4.Serializable 序列化**
+
+所有的事务都是串行执行的，也就不存在并发事务，脏读，可重复读和幻读问题自然也就没有了。
 
 解决：脏读、不可重复读、幻读
 
@@ -140,12 +144,14 @@ SELECT * from TABLE where id = 1  lock in share mode;
 **1.读“脏”数据（Dirty Read）**
 
 读“脏”数据是指：事务T1修改某一数据，并将其写回磁盘，事务T2读取同一数据后，T1由于某种原因被撤销，这时T1已修改过的数据恢复原值，T2读到的数据就与数据库中的数据不一致，T2读到的数据就为“脏”数据，即不正确的数据。
+一个事务正在对一条记录做修改，在这个事务并提交前，这条记录的数据就处于不一致状态；这时，另一个事务也来读取同一条记录，如果不加控制，第二个事务读取了这些尚未提交的脏数据。
 
+事务T1读到其他事务如T2未提交的数据。
 **2.不可重复读（Non-repeatable Read）**
 
 不可重复读，指的是一个事务内根据同一条件对行记录进行多次查询，但是查询出的数据结果不一致，原因就是查询区间数据被其他事务修改了。
-
 不可重复读是指事务T1读取数据后，事务T2执行更新操作，使T1无法再现前一次读取结果。
+一个事务在读取某些数据已经发生了改变、或某些记录已经被删除了。
 
 不可重复读包括三种情况：
   - 事务T1读取某一数据后，事务T2对其做了修改，当事务T1再次读该数据时，得到与前一次不同的值 
@@ -155,6 +161,8 @@ SELECT * from TABLE where id = 1  lock in share mode;
 **3.幻读**
 
 所谓幻读，指的是在同一事务下，连续执行两次同样的SQL语句可能导致不同的结果，第二次的SQL语句可能会返回之前不存在的行，也就是"幻行"。
+
+一个事务按相同的查询条件重新读取以前检索过的数据，却发现其他事务插入了满足其查询条件的新数据。
 
 是指当事务不是独立执行时发生的一种现象，例如第一个事务对一个表中的数据进行了修改，这种修改涉及到表中的全部数据行。同时，第二个事务也修改这个表中的数据，这种修改是向表中插入一行新数据。那么，以后就会发生操作第一个事务的用户发现表中还有没有修改的数据行，就好象发生了幻觉一样。
 
@@ -169,10 +177,79 @@ Serializable 隔离级别下 select 操作并会对当前记录加锁，select .
 
 **不可重复读和幻读区别**
 - 不可重复读重点在于update和delete，而幻读的重点在于insert
+- 控制角度，不可重复读只需要锁住满足条件的记录，幻读要锁住满足条件及其相近的记录
 
 # MySQL 解决幻读问题
-1.多版本并发控制（MVCC）（快照读/一次性读）
-2.next-key锁（当前读）
+1.MVCC
+2.next-key lock
+
+
+# 多版本并发控制（MVCC）
+MVCC的实现是基于ReadView版本链以及Undo日志实现的。
+通过Undo日志中的**版本链**和**ReadView一致性视图**来实现的。
+MVCC就是在使用READ COMMITTD、REPEATABLE READ这两种隔离级别的事务在执行普通的SELECT操作时访问记录的版本链的过程，这样可以使不同事务的读-写、写-读操作并发执行，从而提升系统性能；
+
+**版本链**
+对于使用InnoDB存储引擎的表来说，它的聚簇索引记录中都包含两个必要的隐藏列
+- DB_TRX_ID：每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的事务id赋值给DB_TRX_ID隐藏列。
+- DB_ROLL_PTR：每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到undo日志中，然后这个隐藏列就相当于一个指针，可以通过它来找到该记录修改前的信息
+
+每次对记录进行改动，都会记录一条undo日志，每条undo日志也都有一个DB_ROLL_PTR属性（INSERT操作对应的undo日志没有该属性，因为该记录并没有更早的版本），可以将这些undo日志都连起来，串成一个链表。
+对该记录每次更新后，都会将旧值放到一条undo日志中，就算是该记录的一个旧版本，随着更新次数的增多，所有的版本都会被DB_ROLL_PTR属性连接成一个链表，我们把这个链表称之为版本链，版本链的头节点就是当前记录最新的值。
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/DB_ROLL_PTR.png)
+
+**ReadView**
+核心问题就是：需要判断一下版本链中的哪个版本是当前事务可见的。
+
+READVIEW中包含以下几个参数：
+- m_ids：表示在生成READVIEW时当前系统中活跃的读写事务的事务id列表，活跃的是指当前系统中那些尚未提交的事务；
+- min_trx_id：表示在生成READVIEW时当前系统中活跃的读写事务中最小的事务id，也就是m_ids中的最小值；
+- max_trx_id：表示生成READVIEW时系统中应该分配给下一个事务的事务id值，由于事务id一般是递增分配的，所以max_trx_id就是m_ids中最大的那个id再加上1；
+- creator_trx_id：表示生成该READVIEW的事务id，由于只有在对表中记录做改动（增删改）时才会为事务分配事务id，所以在一个读取数据的事务中的事务id默认为0；
+
+访问某条记录时，按照如下的规则进行判断版本链中哪个版本对当前读事务是否可见：
+- 版本的trx_id == READVIEW中的creator_trx_id，表示当前读事务正在读取被自己修改过的记录，该版本可以被当前事务访问；
+- 版本trx_id < min_trx_id，表明生成该版本的事务在当前事务生成READVIEW前已经提交了，所以该版本可以被当前事务访问；
+- 版本的trx_id > max_trx_id，表明生成该版本的事务在当前事务生成READVIEW后才开启的，该版本不可被当前事务访问；
+- 版本的trx_id在READVIEW的min_trx_id和max_trx_id之间，那就需要判断一下trx_id属性值是不是在m_ids中。如果在这个范围内，说明创建READVIEW时该事务还处于活跃状态，该版本不可以被当前事务访问；如果不在，说明创建READVIEW时生成该版本的事务已经被提交，该版本可以被当前事务访问；
+
+READ COMMITED和REPEATABLE READ在生成READVIEW时的区别
+- READ COMMITED 在每一次 SELECT 语句前都会生成一个 ReadView，事务期间会更新，因此在其他事务提交前后所得到的 m_ids 列表可能发生变化，使得先前不可见的版本后续又突然可见了。
+- REPEATABLE READ 只在事务的第一个 SELECT 语句时生成一个 ReadView，事务操作期间不更新。
+
+MVCC不能完全解决幻读
+```
+# 事务T1，REPEATABLE READ隔离级别下
+mysql> BEGIN;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT * FROM t_test WHERE id = 2;
+Empty set (0.01 sec)
+
+# 此时事务T2执行了：INSERT INTO t_test VALUES(2, '哈哈'); 并提交
+
+mysql> UPDATE t_test SET name = '哈哈' WHERE id = 2;
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> SELECT * FROM t_test WHERE id = 2;
++--------+---------+
+| id  |  name    |
++--------+---------+
+|     2 |   哈哈   |
++--------+---------
+1 row in set (0.01 sec)
+```
+在REPEATABLE READ隔离级别下，T1第一次执行普通的SELECT语句时生成了一个ReadView，之后T2向表中新插入了一条记录便提交了，ReadView并不能阻止T1执行UPDATE或者DELETE语句来对改动这个新插入的记录（因为T2已经提交，改动该记录并不会造成阻塞），但是这样一来这条新记录的trx_id隐藏列就变成了T1的事务id。
+之后T1中再使用普通的SELECT语句去查询这条记录时就可以看到这条记录了，也就把这条记录返回给客户端了。
+
+# next-key锁
+next-key锁其实包含了记录锁和间隙锁，即锁定一个范围，并且锁定记录本身，InnoDB默认加锁方式是 next-key 锁。
+
+**记录锁（行锁）**
+
+**间隙锁**
+
 
 # 数据库三范式
 **第一范式(1st NF －列都是不可再分)**
@@ -315,8 +392,6 @@ EXPLAIN SELECT * FROM test WHERE col1=1;   // type: ref
 
 MySQL可以利用索引返回SELECT 列表中的字段，而不必根据索引再次读取数据文件。包含所有满足查询需要的数据的索引成为覆盖索引(Covering Index)。也就是平时所说的不需要回表操作，也就是说当前查询所需要的数据直接就可以在索引里面查得到。有时候根据业务，建立多列索引，使用覆盖索引，可以取得相当好的性能优化。
 
-# 区分度不高的字段不宜建立索引
-
 
 # MySQL中 redo log、undo log 和 binlog 区别
 MySQL中有六种日志文件：重做日志（redo log）、回滚日志（undo log）、二进制日志（binlog）、错误日志（errorlog）、慢查询日志（slow query log）、一般查询日志（general log），中继日志（relay log）。
@@ -341,6 +416,7 @@ MySQL中有六种日志文件：重做日志（redo log）、回滚日志（undo
 
 内容
 逻辑格式的日志，在执行undo的时候，仅仅是将数据从逻辑上恢复至事务之前的状态，而不是从物理页面上操作实现的，这一点是不同于redo log的。
+undo log主要存储的是逻辑日志，比如我们要insert一条数据了，那undo log会记录的一条对应的delete日志。我们要update一条记录时，它会记录一条对应相反的update记录
 
 什么时候产生
 事务开始之前，将当前是的版本生成undo log，undo 也会产生 redo 来保证undo log的可靠性
@@ -367,3 +443,6 @@ binlog的默认是保持时间由参数expire_logs_days配置，也就是说对�
 2. 内容不同：redo log是物理日志，是数据页面的修改之后的物理记录，binlog是逻辑日志，可以简单认为记录的就是sql语句
 3. 另外，两者日志产生的时间，可以释放的时间，在可释放的情况下清理机制，都是完全不同的
 4. 恢复数据时候的效率，基于物理日志的redo log恢复数据的效率要高于语句逻辑日志的binlog
+
+# SQL执行机制
+先是连接器，连接成功，如果用了缓存就还要查询缓存，缓存内能查到结果后面的就都不走了，直接返回，没有命中缓存就依次，分析器，优化器，执行器；执行器的步骤是这样的：从磁盘文件找到对应查询条件的整页数据加载到buffer pool，写入更新数据的旧值到uodo日志文件，更新buffer pool内加载的数据，写redo日志，准备提交事务 redo日志写入磁盘，准备提交事务 binlog日志写入磁盘，写入commit 标记到redo日志文件里 提交事务完成，buffer pool随机写入磁盘；大概就上面的步骤，是以更新操作来说的
