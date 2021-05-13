@@ -251,6 +251,21 @@ put方法流程：
 get方法：
 - 根据key的hash值找到其在table所对应的位置i,然后在table[i]位置所存储的链表(或者是树)进行查找是否有键为key的节点，如果有，则返回节点对应的value，否则返回null。
 
+# HashSet
+HashSet实际上就是HashMap，采用HashMap作为容器，key为元素，value为PRESENT对象。
+```
+    /**
+     * Constructs a new, empty set; the backing <tt>HashMap</tt> instance has
+     * default initial capacity (16) and load factor (0.75).
+     */
+    public HashSet() {
+        map = new HashMap<>();
+    }
+    // Dummy value to associate with an Object in the backing Map
+    private static final Object PRESENT = new Object();
+    
+```
+
 # volatile
 
 **1.内存可见性**
