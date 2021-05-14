@@ -251,6 +251,13 @@ put方法流程：
 get方法：
 - 根据key的hash值找到其在table所对应的位置i,然后在table[i]位置所存储的链表(或者是树)进行查找是否有键为key的节点，如果有，则返回节点对应的value，否则返回null。
 
+## ConcurrentHashMap 线程安全
+JDK 1.8，基于CAS + synchronized。
+- CAS：在判断数组中当前位置为null的时候，使用CAS来把这个新的Node写入数组中对应的位置
+- synchronized ：当数组中的指定位置不为空时，通过加锁来添加这个节点进入数组(链表<8)或者是红黑树（链表>=8）
+
+ConcurrentHashMap会判断tabAt(tab, i = (n - 1) & hash)是不是 null，是的话就直接采用CAS进行插入，而如果不为空的话，则是synchronized锁住当前Node的首节点，这是因为当该Node不为空的时候，证明了此时出现了Hash碰撞，就会涉及到链表的尾节点新增或者红黑树的节点新增以及红黑树的平衡，这些操作自然都是非原子性的。从而导致无法使用CAS，当Node的当前下标为null的时候，由于只是涉及数组的新增，所以用CAS即可。
+
 # HashSet
 HashSet实际上就是HashMap，采用HashMap作为容器，key为元素，value为PRESENT对象。
 ```
