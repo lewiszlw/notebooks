@@ -56,6 +56,12 @@ Error类一般是指与虚拟机相关的问题，如系统崩溃，虚拟机错
 2. 替代配置文件
 3. 编译检查：@Override
 
+元注解
+- @Target，表明该注解可以应用的java元素类型，如 TYPE、METHOD、FIELD等
+- @Retention，表明该注解的生命周期，如 SOURCE、CLASS 和 RUNTIME
+- @Document，表明该注解标记的元素可以被Javadoc 或类似的工具文档化
+- @Inherited，表明使用了@Inherited注解的注解，所标记的类的子类也会拥有这个注解
+
 # Reader和Inputstream区别
 
 Reader用于读取字符流，InputStream用于读取字节流。Reader读取出来的是char数组或者String字符串，InputStream读取出来的是byte数组。

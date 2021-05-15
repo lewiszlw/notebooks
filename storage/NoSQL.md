@@ -20,3 +20,9 @@ DynamoDB 中的数据在发生变化时，均会发送相应的事件流。
 
 DDB是AP数据库
 通常主表会有三个备份，默认情况下写入到两个副本中即认为写入成功，因此在高频读取时也有一定的概率读到未完成写入的数据。GSI 读写会产生一致性的原因是 GSI 和主表实际是 两个不同的存储，写入到主表的数据会通过流同步到GSI，这个过程会存在一定的延时（10ms级别）。
+
+DDD 事务
+DynamoDB通过TransactWriteItems和TransactGetItems API调用支持事务。
+
+Hot partition问题
+partition key设计不合理，某一partition key下有很多条数据，在极端情况下，如果单个分区接收的流量超出 3000 RCU 或 1000 WCU，就会出现限制。

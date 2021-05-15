@@ -66,6 +66,12 @@ select * from artile where status != 1 and status != 2;
 select * from artile where status in (0,3)
 ```
 
+# Join连接
+LEFT JOIN（左连接）：获取左表所有记录，即使右表没有对应匹配的记录。
+RIGHT JOIN（右连接）： 与 LEFT JOIN 相反，用于获取右表所有记录，即使左表没有对应匹配的记录。
+INNER JOIN（内连接或等值连接）：获取两个表中字段匹配关系的记录，取交集。
+
+
 # MYSQL引擎类型
 1.ISAM：ISAM执行读取操作的速度很快，而且不占用大量的内存和存储资源。不支持事务处理，也不能够容错。
 
