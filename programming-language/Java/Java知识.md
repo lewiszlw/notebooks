@@ -38,6 +38,8 @@ String中的对象是不可变的，也就可以理解为常量，线程安全�
 - 覆写equals方法的时候，也必须覆写hashcode方法（主要用于Map之类的接口，利用hashcode方法来计算存储位置，所以当两个对象equals比较相同，即为同一对象，如果hashcode不一样，会判定为不同对象，产生矛盾）；
 - 编写equals方法后，检查是否符合：对称性、传递性、一致性、自反性和非空性
 
+TODO
+
 # 异常处理
 
 ## Error、Exception和RuntimeException的区别和作用
@@ -78,6 +80,9 @@ BIO方式适用于连接数目比较小且固定的架构，这种方式对服�
 同步非阻塞，服务器实现模式为一个请求一个线程，即客户端发送的连接请求都会注册到多路复用器上，多路复用器轮询到连接有I/O请求时才启动一个线程进行处理。原来的 I/O 以流的方式处理数据，而 NIO 以块的方式处理数据。NIO 面向缓冲区(Buffer oriented)。
 
 NIO方式适用于连接数目多且连接比较短（轻操作）的架构，比如聊天服务器，并发局限于应用中，编程比较复杂，JDK1.4开始支持。
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JDK-NIO.png)
+
 
 **AIO**
 
