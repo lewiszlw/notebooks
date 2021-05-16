@@ -129,20 +129,21 @@ SELECT * from TABLE where id = 1  lock in share mode;
 
 # 数据库隔离级别
 **1.Read uncommitted 读未提交**
+不加锁。
 
 **2.Read committed 读提交**
 
 解决：脏读
 
 **3.Repeatable read 重复读**
-
-InnoDB 默认隔离级别。
+采用MVCC实现可重复读。InnoDB 默认隔离级别。
+采用Next-key lock解决幻读现象。
 
 解决：脏读、不可重复读
 
 **4.Serializable 序列化**
 
-所有的事务都是串行执行的，也就不存在并发事务，脏读，可重复读和幻读问题自然也就没有了。
+读的时候加共享锁，也就是其他事务可以并发读，但是不能写。写的时候加排它锁，其他事务不能并发写也不能并发读。
 
 解决：脏读、不可重复读、幻读
 
@@ -252,6 +253,7 @@ mysql> SELECT * FROM t_test WHERE id = 2;
 # next-key锁
 next-key锁其实包含了记录锁和间隙锁，即锁定一个范围，并且锁定记录本身，InnoDB默认加锁方式是 next-key 锁。
 
+TODO
 **记录锁（行锁）**
 
 **间隙锁**

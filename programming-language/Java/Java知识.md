@@ -81,7 +81,7 @@ BIO方式适用于连接数目比较小且固定的架构，这种方式对服�
 
 NIO方式适用于连接数目多且连接比较短（轻操作）的架构，比如聊天服务器，并发局限于应用中，编程比较复杂，JDK1.4开始支持。
 
-![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JDK-NIO.png)
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JDK-NIO.jpg)
 
 
 **AIO**
@@ -91,7 +91,7 @@ NIO方式适用于连接数目多且连接比较短（轻操作）的架构，�
 AIO方式适用于连接数目多且连接比较长（重操作）的架构，比如相册服务器，充分调用OS参与并发操作，编程比较复杂，JDK7开始支持。
 
 # HashMap
-## HashMap和Hashtable的区别
+### HashMap和Hashtable的区别
 
 1.安全性
 
@@ -115,12 +115,12 @@ Hashtable继承自Dictionary，HashMap继承自AbstractMap。
 
 7.哈希值的使用不同，HashTable直接使用对象的hashCode； HashMap重新计算hash值，而且用与代替求模。
 
-## HashMap自定义对象做为key
+### HashMap自定义对象做为key
 1.不可变对象
 
 2.重写hashcode和equals。需要用到hashcode值计算索引位置
 
-## HashMap实现原理
+### HashMap实现原理
 
 1.原理
 
@@ -140,15 +140,28 @@ HashMap实际上是一个“链表散列”的数据结构，即数组和链表�
 
 建立公共溢出区：一个基本表，一个冲突表
 
-## HashMap并发不安全原因
+### HashMap在JDK1.8和JDK1.7中的区别
+**底层结构**
+1.7是数组+链表，1.8是数组+链表+红黑树。
+
+**高位运算（JDK1.8）**
+右位移16位，正好是32bit的一半，自己的高半区和低半区做异或，就是为了**混合原始哈希码的高位和低位，以此来加大低位的随机性**。而且混合后的低位参杂了高位的部分特征，这样高位的信息也被变相保留下来。
+通过h & (table.length -1)来得到该对象的保存位，而HashMap底层数组的长度总是2的n次方，这是HashMap在速度上的优化。当length总是2的n次方时，h& (length-1)运算等价于对length取模，也就是h%length，但是&比%具有更高的效率。
+注：位运算取模或者取余时，只适用于：求一个数X除以2的n次幂的模，即 X&(2<<n-1)。
+
+**尾插法（JDK1.8）**
+JDK1.7是头插法，即哈希冲突时，考虑到新插入的数据可能会更早用到，插入链表头部。头插法会造成死链，即循环链表。rehash的时候，旧链表迁移新链表的时候，如果在新表的数组索引位置相同，则链表元素会倒置（就是因为头插)），所以最后的结果 还是打乱了插入的顺序。
+JDK1.8是尾插法，插入到链表尾部。
+
+### HashMap并发不安全原因
 链地址法解决哈希冲突，插入链表时不安全，并发操作可能导致另一个插入操作失效。
 
-## hashcode作用
+### hashcode作用
 1.获取哈希值，用于计算索引等，如HashMap使用hashcode计算key的位置
 
 2.判断对象是否相同
 
-## HashMap中链表和红黑树转化
+### HashMap中链表和红黑树转化
 ```
     /**
      * The bin count threshold for using a tree rather than list for a
@@ -182,7 +195,7 @@ HashMap实际上是一个“链表散列”的数据结构，即数组和链表�
 
 红黑树特点：自平衡，高度低，查询速度快。
 
-## HashMap代码分析示例
+### HashMap代码分析示例
 ```
 HashMap<String,Integer> map = new HashMap(5);  // 堆里面创建一个对象，Node<K,V>[] table初始容量为第一个大于等于initialCapacity的2的幂，如果不传initialCapacity则默认16
 map.put("a",1);   // table[1]=Node("a"->1)
