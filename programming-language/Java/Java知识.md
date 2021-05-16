@@ -576,3 +576,11 @@ Java核心线程池的回收由allowCoreThreadTimeOut参数控制，默认为fal
 线程池关闭
 - shutdown 通知有序停止，先前提交的任务务会执行
 - shutdownNow 尝试立即停止，忽略队列里等待的任务，方法返回未执行过的tasks
+
+# ScheduledThreadPoolExecutor实现
+TODO
+1.DelayQueue是无界队列
+2.ScheduledFutureTask为具体任务，包含long型time（任务将要被执行的具体时间）
+3.DelayQueue中维护一个优先队列，time小的在前
+4.线程执行完后会修改time（下次执行时间）并放回DelayQueue
+5.如果DelayQueue，线程会进入Condition(类似等待队列waitset)等待
