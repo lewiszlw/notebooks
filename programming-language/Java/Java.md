@@ -37,8 +37,11 @@ String中的对象是不可变的，也就可以理解为常量，线程安全�
 # equals方法实现
 - 覆写equals方法的时候，也必须覆写hashcode方法（主要用于Map之类的接口，利用hashcode方法来计算存储位置，所以当两个对象equals比较相同，即为同一对象，如果hashcode不一样，会判定为不同对象，产生矛盾）；
 - 编写equals方法后，检查是否符合：对称性、传递性、一致性、自反性和非空性
-
-TODO
+  - 自反性(reflexive)：对于任何非null的引用值x, x.equals(x)必须返回true
+  - 对称性(symmetric)：对于任何非null的引用值x和y,当且仅当y.equals(x)返回true时，x.equals(y)必须返回true
+  - 传递性(transitive)：对于任何非null的引用值x,y和z，如果x.equals(y)返回true，并且y.equals(z)返回true，那么x.equals(z)返回true
+  - 一致性：对于任何非null的引用值x和y，只要equals的比较操作在对象中所用的信息没有被修改，多次调用x.equals(y)就会一致地返回true，或者一致地返回false
+  - 非空性：对于任何非null的引用值x,x.equals(null)必须返回false
 
 # 异常处理
 
@@ -211,6 +214,9 @@ map.put("aa",13); // table[0]=Node("aa"->13)
 map.put("bb",14); // table[0].next=Node("bb",14)，链表
 ```
 
+# TreeMap
+基于红黑树实现 TODO
+
 # ConcurrentHashMap
 **JDK 1.7**
 
@@ -333,6 +339,10 @@ volatile关键字提供内存屏障的方式来防止指令被重排，编译器
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/synchronized%E5%8E%9F%E7%90%86.png)
 
 https://juejin.im/post/5ccd84dee51d456e3428c1af
+
+**synchronized锁粗化**
+TODO
+**synchronized锁消除**
 
 **synchronized重入性**
 
@@ -570,7 +580,8 @@ ReentrantReadWriteLock，适合读多写少，提高并发效率。
 **CGlib 和 JDK 动态代理区别**
 CGlib 不能代理 final 类，因为 final 类没有子类，JDK 动态代理需要实现指定接口。
 
-# ThreadPoolExecutor线程池处理流程
+# 线程池
+### ThreadPoolExecutor自定义线程池
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/ThreadPoolExecutor%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png)
 
 处理流程：
@@ -595,10 +606,75 @@ Java核心线程池的回收由allowCoreThreadTimeOut参数控制，默认为fal
 - shutdown 通知有序停止，先前提交的任务务会执行
 - shutdownNow 尝试立即停止，忽略队列里等待的任务，方法返回未执行过的tasks
 
-# ScheduledThreadPoolExecutor实现
+线程执行任务抛出异常会怎样？
+线程池会把该线程销毁，并创建一个新线程到线程池中。
+```
+/**
+ * Performs cleanup and bookkeeping for a dying worker. Called
+ * only from worker threads. Unless completedAbruptly is set,
+ * assumes that workerCount has already been adjusted to account
+ * for exit.  This method removes thread from worker set, and
+ * possibly terminates the pool or replaces the worker if either
+ * it exited due to user task exception or if fewer than
+ * corePoolSize workers are running or queue is non-empty but
+ * there are no workers.
+ *
+ * @param w the worker
+ * @param completedAbruptly if the worker died due to user exception
+ */
+private void processWorkerExit(Worker w, boolean completedAbruptly) {
+    xxx
+}
+```
+
+### ScheduledThreadPoolExecutor
 TODO
 1.DelayQueue是无界队列
 2.ScheduledFutureTask为具体任务，包含long型time（任务将要被执行的具体时间）
 3.DelayQueue中维护一个优先队列，time小的在前
 4.线程执行完后会修改time（下次执行时间）并放回DelayQueue
 5.如果DelayQueue，线程会进入Condition(类似等待队列waitset)等待
+
+**执行任务**
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/ScheduledThreadPoolExecutor_ExecuteTask.png)
+
+1. 线程1从DelayQueue中获取已到期的ScheduledFutureTask（DelayQueue.take()）。到期任务是指ScheduledFutureTask的time大于等于当前时间。
+2. 线程1执行这个ScheduledFutureTask。
+3. 线程1修改ScheduledFutureTask的time变量为下次将要被执行的时间。
+4. 线程1把这个修改time之后的ScheduledFutureTask放回DelayQueue中（DelayQueue.add()）。
+
+**获取任务**
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/ScheduledThreadPoolExecutor_GetTask.png)
+
+1. 获取Lock。
+2. 获取周期任务。
+2.1 如果PriorityQueue为空，当前线程到Condition中等待；否则执行下面的2.2。
+2.2 如果PriorityQueue的头元素的time时间比当前时间大，到Condition中等待到time时间；否 则执行下面的2.3。
+2.3 获取PriorityQueue的头元素（2.3.1）；如果PriorityQueue不为空，则唤醒在Condition中等待的所有线程（2.3.2）。
+3. 释放Lock。
+
+**添加任务**
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/ScheduledThreadPoolExecutor_AddTask.png)
+
+1. 获取Lock。
+2. 添加任务。
+2.1 向PriorityQueue添加任务。
+2.2 如果在上面2.1中添加的任务是PriorityQueue的头元素，唤醒在Condition中等待的所有线程。
+3. 释放Lock。
+
+**ScheduledThreadPoolExecutor和Timer区别**
+1. Timer是通过单线程+队列的方式进行调度，ScheduledThreadPoolExecutor是利用线程池+队列。
+2. Timer线程并不捕获TimerTask抛出未检查的异常，TimerTask抛出的未检查的异常会终止timer线程，已经被安排但尚未执行的TimerTask永远不会再执行了，新的任务也不能被调度了。而ScheduledThreadPoolExecutor会在用户任务抛异常时销毁线程并重新启动一个新线程。
+
+
+### ForkJoinPool
+TODO
+核心思想是将大的任务拆分成多个小任务（即fork），然后在将多个小任务处理汇总到一个结果上（即join）。
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/ForkJoinPool.jpeg)
+
+**work-stealing（工作窃取算法）**
+work-stealing（工作窃取），ForkJoinPool提供了一个更有效的利用线程的机制，当ThreadPoolExecutor还在用单个队列存放任务时，ForkJoinPool已经分配了与线程数相等的队列，当有任务加入线程池时，会被平均分配到对应的队列上，各线程进行正常工作，当有线程提前完成时，会从队列的末端“窃取”其他线程未执行完的任务，当任务量特别大时，CPU多的计算机会表现出更好的性能。
