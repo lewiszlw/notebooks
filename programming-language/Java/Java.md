@@ -281,7 +281,7 @@ put方法流程：
 get方法：
 - 根据key的hash值找到其在table所对应的位置i,然后在table[i]位置所存储的链表(或者是树)进行查找是否有键为key的节点，如果有，则返回节点对应的value，否则返回null。
 
-## ConcurrentHashMap 线程安全
+### ConcurrentHashMap 线程安全
 JDK 1.8，基于CAS + synchronized。
 - CAS：在判断数组中当前位置为null的时候，使用CAS来把这个新的Node写入数组中对应的位置
 - synchronized ：当数组中的指定位置不为空时，通过加锁来添加这个节点进入数组(链表<8)或者是红黑树（链表>=8）
@@ -303,6 +303,13 @@ HashSet实际上就是HashMap，采用HashMap作为容器，key为元素，value
     
 ```
 
+# Java中的原子操作
+1. 除long和double之外的基本类型（int, byte, boolean, short, char, float）的赋值操作。
+2. 所有引用reference的赋值操作，不管是32位的机器还是64位的机器。
+3. java.concurrent.Atomic.* 包中所有类的原子操作。
+
+对于64位的值的写入，可以分为两个32位的操作进行写入，所以在32位上的JVM，long和double的操作不是原子的，但是在64位的JVM上是原子的。鼓励JVM厂商实现时避免拆分64位的值，它还鼓励程序员用volatile关键字解决该问题。
+
 # volatile
 
 **1.内存可见性**
@@ -323,13 +330,13 @@ volatile关键字提供内存屏障的方式来防止指令被重排，编译器
 
 # synchronized
 
-**synchronized关键字作用**
+### 作用
 1. 锁类对象：类的所有实例
 2. 锁对象：该对象
 3. 修饰静态方法：类的所有实例
 4. 修饰非静态方法：该对象
 
-**synchronized锁膨胀**
+### 锁膨胀
 - 偏向锁：顾名思义偏向某个线程的锁，适用于某个线程能长期获取到该锁（如果A线程第一次获得锁，那么锁就进入偏向模式，MarkWord的结构也变成偏向锁结构，如果没有其他线程和A线程竞争，A线程再次请求该锁时，无需任何同步操作。也就是说当一个线程访问同步块并且获取锁的时候，会通过CAS操作在对象头的偏向锁结构里记录线程的ID，如果记录成功，线程在进入和退出同步块时，不需要进行CAS操作来加锁和解锁，从而提高程序的性能）
 - 轻量级锁：如果偏向锁获取失败，那么会使用CAS自旋来完成，轻量级锁适用于线程交替进入临界区
 - 重量级锁：自旋失败之后，会采取重量级锁策略我们线程会阻塞挂起
@@ -340,11 +347,11 @@ volatile关键字提供内存屏障的方式来防止指令被重排，编译器
 
 https://juejin.im/post/5ccd84dee51d456e3428c1af
 
-**synchronized锁粗化**
+### 锁粗化
 TODO
-**synchronized锁消除**
+### 锁消除
 
-**synchronized重入性**
+### 重入性
 
 每个对象有一个监视器锁（monitor）。当monitor被占用时就会处于锁定状态，线程执行monitorenter指令时尝试获取monitor的所有权，过程如下：
 1. 如果monitor的进入数为0，则该线程进入monitor，然后将进入数设置为1，该线程即为monitor的所有者。
@@ -353,10 +360,20 @@ TODO
 
 执行monitorexit的线程必须是objectref所对应的monitor的所有者。指令执行时，monitor的进入数减1，如果减1后进入数为0，那线程退出monitor，不再是这个monitor的所有者。其他被这个monitor阻塞的线程可以尝试去获取这个 monitor 的所有权。
 
-**synchronized原理**
+### 底层原理
 代码块同步，同步代码块的起始位置插入了moniterenter指令，在同步代码块结束的位置插入了monitorexit指令。
 
 方法级的同步是隐式，即无需通过字节码指令来控制的，它实现在方法调用和返回操作之中。JVM可以从方法常量池中的方法表结构(method_info Structure) 中的 ACC_SYNCHRONIZED 访问标志区分一个方法是否同步方法。当方法调用时，调用指令将会 检查方法的 ACC_SYNCHRONIZED 访问标志是否被设置，如果设置了，执行线程将先持有monitor（虚拟机规范中用的是管程一词）(重量锁)， 然后再执行方法，最后再方法完成(无论是正常完成还是非正常完成)时释放monitor。在方法执行期间，执行线程持有了monitor，其他任何线程都无法再获得同一个monitor。如果一个同步方法执行期间抛 出了异常，并且在方法内部无法处理此异常，那这个同步方法所持有的monitor将在异常抛到同步方法之外时自动释放。
+
+### synchronized 和 Lock 区别
+1. Lock是一个接口，是代码层面，具体实现多样化；而synchronized是关键字，是JVM层面实现，由JVM控制获取锁释放锁
+2. synchronized在发生异常时，会自动释放线程占有的锁，因此不会导致死锁现象发生；而Lock在发生异常时，如果没有主动通过unLock()去释放锁，则很可能造成死锁现象，因此使用Lock时需要在finally块中释放锁
+3. Lock可以让等待锁的线程响应中断，线程可以中断去干别的事务，而synchronized却不行，使用synchronized时，等待的线程会一直等待下去，不能够响应中断
+4. 通过Lock可以知道有没有成功获取锁，而synchronized却无法办到
+5. Lock可以提高多个线程进行read操作的效率
+6. Lock可以设置是否公平锁，synchronized是非公平锁
+7. Lock仅适用于代码块范围，而synchronized可以锁住代码块、对象实例、类
+8. Lock可以绑定条件，实现分组唤醒需要的线程；synchronized要么随机唤醒一个，要么唤醒全部线程
 
 # 对象结构
 对象分为三块区域: 对象头、实例数据和对齐填充。
@@ -484,6 +501,41 @@ BLOCKED是指线程正在等待获取锁；WAITING是指线程正在等待其他
 # 线程间通信方式
 - JVM提供的API：如wait方法、notify方法和notifyAll方法
 
+# 线程中断
+Java中断机制是一种协作机制，也就是说通过中断并不能直接终止另一个线程，而需要被中断的线程自己处理中断。中断一个线程只是为了引起该线程的注意，被中断线程可以决定如何应对中断，中断或者不中断。
+
+线程调用interrupt()方法的时候虚拟机会在此线程上标记一个标志（这个中断标志只是一个布尔类型的变量），代表这个线程可能被中断，在后面的中断操作也是根据这个中断标志执行的。
+
+```
+/**
+ * Tests whether the current thread has been interrupted.  The
+ * <i>interrupted status</i> of the thread is cleared by this method.  In
+ * other words, if this method were to be called twice in succession, the
+ * second call would return false (unless the current thread were
+ * interrupted again, after the first call had cleared its interrupted
+ * status and before the second call had examined it).
+ *
+ * <p>A thread interruption ignored because a thread was not alive
+ * at the time of the interrupt will be reflected by this method
+ * returning false.
+ *
+ * @return  <code>true</code> if the current thread has been interrupted;
+ *          <code>false</code> otherwise.
+ * @see #isInterrupted()
+ * @revised 6.0
+ */
+public static boolean interrupted() {
+    return currentThread().isInterrupted(true);
+}
+
+/**
+ * Tests if some Thread has been interrupted.  The interrupted state
+ * is reset or not based on the value of ClearInterrupted that is
+ * passed.
+ */
+private native boolean isInterrupted(boolean ClearInterrupted);
+```
+
 # CAS机制
 CAS (Compare And Set)：一个当前内存值V、旧的预期值A、即将更新的值B，当且仅当预期值A和内存值V相同时，将内存值修改为B并返回true，否则什么都不做，并返回false。
 
@@ -606,8 +658,104 @@ Java核心线程池的回收由allowCoreThreadTimeOut参数控制，默认为fal
 - shutdown 通知有序停止，先前提交的任务务会执行
 - shutdownNow 尝试立即停止，忽略队列里等待的任务，方法返回未执行过的tasks
 
-线程执行任务抛出异常会怎样？
+**线程执行任务runWorker方法**
+
+```
+/**
+ * Main worker run loop.  Repeatedly gets tasks from queue and
+ * executes them, while coping with a number of issues:
+ *
+ * 1. We may start out with an initial task, in which case we
+ * don't need to get the first one. Otherwise, as long as pool is
+ * running, we get tasks from getTask. If it returns null then the
+ * worker exits due to changed pool state or configuration
+ * parameters.  Other exits result from exception throws in
+ * external code, in which case completedAbruptly holds, which
+ * usually leads processWorkerExit to replace this thread.
+ *
+ * 2. Before running any task, the lock is acquired to prevent
+ * other pool interrupts while the task is executing, and then we
+ * ensure that unless pool is stopping, this thread does not have
+ * its interrupt set.
+ *
+ * 3. Each task run is preceded by a call to beforeExecute, which
+ * might throw an exception, in which case we cause thread to die
+ * (breaking loop with completedAbruptly true) without processing
+ * the task.
+ *
+ * 4. Assuming beforeExecute completes normally, we run the task,
+ * gathering any of its thrown exceptions to send to afterExecute.
+ * We separately handle RuntimeException, Error (both of which the
+ * specs guarantee that we trap) and arbitrary Throwables.
+ * Because we cannot rethrow Throwables within Runnable.run, we
+ * wrap them within Errors on the way out (to the thread's
+ * UncaughtExceptionHandler).  Any thrown exception also
+ * conservatively causes thread to die.
+ *
+ * 5. After task.run completes, we call afterExecute, which may
+ * also throw an exception, which will also cause thread to
+ * die. According to JLS Sec 14.20, this exception is the one that
+ * will be in effect even if task.run throws.
+ *
+ * The net effect of the exception mechanics is that afterExecute
+ * and the thread's UncaughtExceptionHandler have as accurate
+ * information as we can provide about any problems encountered by
+ * user code.
+ *
+ * @param w the worker
+ */
+final void runWorker(Worker w) {
+    Thread wt = Thread.currentThread();
+    Runnable task = w.firstTask;
+    w.firstTask = null;
+    w.unlock(); // allow interrupts
+    boolean completedAbruptly = true;
+    try {
+        // 执行worker携带任务或者调用getTask()从阻塞队列取任务
+        while (task != null || (task = getTask()) != null) { 
+            w.lock();
+            // If pool is stopping, ensure thread is interrupted;
+            // if not, ensure thread is not interrupted.  This
+            // requires a recheck in second case to deal with
+            // shutdownNow race while clearing interrupt
+            if ((runStateAtLeast(ctl.get(), STOP) ||
+                 (Thread.interrupted() &&
+                  runStateAtLeast(ctl.get(), STOP))) &&
+                !wt.isInterrupted())
+                wt.interrupt();
+            try {
+                beforeExecute(wt, task);
+                Throwable thrown = null;
+                try {
+                    // 执行任务
+                    task.run();
+                } catch (RuntimeException x) {
+                    thrown = x; throw x;
+                } catch (Error x) {
+                    thrown = x; throw x;
+                } catch (Throwable x) {
+                    thrown = x; throw new Error(x);
+                } finally {
+                    afterExecute(task, thrown);
+                }
+            } finally {
+                task = null;
+                w.completedTasks++;
+                w.unlock();
+            }
+        }
+        completedAbruptly = false;
+    } finally {
+        // 如果completedAbruptly为true，说明任务抛出异常导致线程死亡，会销毁该worker，创建新worker
+        processWorkerExit(w, completedAbruptly);
+    }
+}
+```
+
+**线程执行任务抛出异常会怎样？**
+
 线程池会把该线程销毁，并创建一个新线程到线程池中。
+
 ```
 /**
  * Performs cleanup and bookkeeping for a dying worker. Called
@@ -665,6 +813,12 @@ TODO
 2.2 如果在上面2.1中添加的任务是PriorityQueue的头元素，唤醒在Condition中等待的所有线程。
 3. 释放Lock。
 
+**任务调度方式**
+- scheduleWithFixedDelay (Runnable command, long initialDelay, long delay, TimeUnit unit)：线程延迟执行。给定首次任务延时时间initialDelay，后续每次任务终止和下一次任务开始都存在给定延时delay
+- scheduleAtFixedRate (Runnable command, long initialDelay, long period,TimeUnit unit)：给定首次任务延时时间initialDelay，后续每次任务开始和下一次任务开始都存在给定延时delay。线程依照时间表执行，如果到指定时间点线程还没有执行完毕，则放弃该时间点，执行完毕后继续执行下一个线程。
+- schedule (Callable<V> callable, long delay, TimeUnit unit)：创建并执行在给定延迟后启用的一次性操作。
+  schedule (Runnable command, long delay, TimeUnit unit)：创建并执行在给定延迟后启用的一次性操作。
+
 **ScheduledThreadPoolExecutor和Timer区别**
 1. Timer是通过单线程+队列的方式进行调度，ScheduledThreadPoolExecutor是利用线程池+队列。
 2. Timer线程并不捕获TimerTask抛出未检查的异常，TimerTask抛出的未检查的异常会终止timer线程，已经被安排但尚未执行的TimerTask永远不会再执行了，新的任务也不能被调度了。而ScheduledThreadPoolExecutor会在用户任务抛异常时销毁线程并重新启动一个新线程。
@@ -678,3 +832,26 @@ TODO
 
 **work-stealing（工作窃取算法）**
 work-stealing（工作窃取），ForkJoinPool提供了一个更有效的利用线程的机制，当ThreadPoolExecutor还在用单个队列存放任务时，ForkJoinPool已经分配了与线程数相等的队列，当有任务加入线程池时，会被平均分配到对应的队列上，各线程进行正常工作，当有线程提前完成时，会从队列的末端“窃取”其他线程未执行完的任务，当任务量特别大时，CPU多的计算机会表现出更好的性能。
+
+
+# Future
+Future(java.util.concurrent Interface Future<V>)表示异步计算的结果。Future接口提供了检查计算是否完成、检查计算是否被取消、等待计算完成并获取计算结果等方法。
+
+### FutureTask
+TODO
+
+FutureTask 实现的 RunnableFuture 接口，而 RunnableFuture 接口继承 Runnable 和 Future 接口。
+
+线程池举例
+1. 向线程池submit一个Callable任务(Runnable也会被转为Callable)， 这时候Callable被传入一个FutureTask实例中
+2. 线程池使用一个线程，执行这个 FutureTask 任务
+3. 最终会调用Callable.call()或者是 Runnable.run()方法，然后得到一个结果，把结果存储在FutureTask实例的outcome属性中，同时把状态修改为NORMAL，表明任务已经执行完毕，可以获取结果了
+
+
+### CompletableFuture
+TODO
+
+JDK1.8引入。
+
+回调
+内部有线程池，当任务执行完后，更新任务执行状态，并触发注册的回调函数。
