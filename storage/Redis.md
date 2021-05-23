@@ -1,8 +1,8 @@
-# Redis支持的数据类型
-**string 字符串**
+# Redis数据类型
+### string 字符串
 简单动态字符串（SDS）和直接存储，但其编码方式可以是int、raw或者embstr，区别在于内存结构的不同。
 
-**list 列表**
+### list 列表
 结构为一个链表，记录头和尾的地址，元素不唯一，先入先出原则。
 
 如创建一个 key = ‘numbers’，value = ‘1 three 5’ 的三个值的列表
@@ -16,7 +16,7 @@
 3.quicklist实现
 3.2之后为quikclist实现 TODO
 
-**set 集合**
+### set 集合
 一个值为空的散列表。
 
 1.intset实现
@@ -25,7 +25,7 @@
 2.hashtable实现
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/Redis-Set-Hashtable.png)
 
-**hash 散列**
+### hash 散列
 hash的key必须是唯一的
 
 如存储一个`{"name": "Tom", "age": 25, "career": "Programmer"}`的对象
@@ -36,7 +36,7 @@ hash的key必须是唯一的
 2.hashtable实现
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/Redis-Hash-Hashtable.png)
 
-**sort set 有序集合**
+### sorted set / zset 有序集合
 
 1.ziplist实现
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/Redis-Sortset-Ziplist.png)
@@ -47,17 +47,17 @@ hash的key必须是唯一的
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/Redis-Sortset-Skiplist.png)
 字典的键保存元素的值，字典的值则保存元素的分值；跳跃表节点的 object 属性保存元素的成员，跳跃表节点的 score 属性保存元素的分值。
 
-为何skiplist编码要同时使用跳跃表和字典实现？
+**为何skiplist编码要同时使用跳跃表和字典实现？**
 
 - 跳跃表优点是有序，但是查询分值复杂度为O(logn)；字典查询分值复杂度为O(1) ，但是无序，所以结合连个结构的有点进行实现。
 - 虽然采用两个结构但是集合的元素成员和分值是共享的，两种结构通过指针指向同一地址，不会浪费内存。
 
 
-压缩列表（ziplist）
+**压缩列表（ziplist）**
 
 本质上就是一个字节数组，是Redis为了节约内存而设计的一种线性数据结构，可以包含任意多个元素，每个元素可以是一个字节数组或一个整数。
 
-跳跃表（skiplist）
+**跳跃表（skiplist）**
 
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/Skiplist1.png)
 原始链表的查询时需要从头到尾依次遍历遇到所有节点，性能较差。
@@ -65,7 +65,7 @@ hash的key必须是唯一的
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/Skiplist2.jpg)
 可以给每个节点都维护一组指向其后每一个节点的指针，这样就可以通过任意一个节点，访问到其后的任意一个节点了，但是同时也会发现，所有节点需要维护的指针数目是(n-1)!。
 
-Redis跳跃表实现
+**Redis跳跃表实现**
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/Redis-Skiplist.jpg)
 
 - 每个节点上都保存了一个用于指向其后节点的指针数组；
@@ -74,7 +74,7 @@ Redis跳跃表实现
 - 节点中还会保存前向指针跳过的节点数span，可以用于分页。
 - 最大32层指针，是因为生成指针的期望是1/4，所以2^32个节点中，才会有一个32层指针的节点，32层完全够用。
 
-Redis 渐进式哈希
+**Redis 渐进式哈希**
 
 redis中会默认存在两个哈希表，开始使用时默认使用哈希表1，哈希表2未分配空间，当需要rehash时，
 1. 给哈希表2分配更大空间
@@ -136,20 +136,5 @@ AOF 文件的写入流程可以分为以下 3 个步骤：
 优点：数据更完整，安全性更高，秒级数据丢失；AOF 文件是一个只进行追加的命令文件，且写入操作是以 Redis 协议的格式保存的，内容是可读的，适合误删紧急恢复。
 缺点：对于相同的数据集，AOF 文件的体积要远远大于 RDB 文件，数据恢复也会比较慢；根据所使用的 fsync 策略，AOF 的速度可能会慢于 RDB。
 
-# Guava cache 机制
-Cache数据结构
-类似 1.7 ConcurrentHashMap，结构是 Segement 数组 + HashEntry数组 + 链表。
-
-关键参数
-- expireAfterWrite 当缓存项在指定的时间内没有更新就会被回收
-- expireAfterAccess 当缓存项在指定的时间内没有被读或写就会被回收
-- refreshAfterWrite 当缓存项上一次更新操作之后的多久会被刷新
-- concurrencyLevel 并发级别，使得缓存支持并发的写入和读取
-
-refreshAfterWrite
-特点是，在refresh的过程中，严格限制只有1个重新加载操作，而其他查询先返回旧值，这样有效地可以减少等待和锁争用。但不能严格保证所有的查询都获取到新值。
-
-回收机制
-- 基于容量回收：在缓存项的数目达到限定值之前，采用LRU的回收方式
-- 定时回收：expireAfterAccess，缓存项在给定时间内没有被读/写访问，则回收，回收顺序和基于大小回收一样（LRU）；expireAfterWrite，缓存项在给定时间内没有被写访问（创建或覆盖），则回收
-- 基于引用回收：通过使用弱引用的键、或弱引用的值、或软引用的值，Guava Cache可以垃圾回收
+# Redis 集群
+TODO

@@ -64,3 +64,9 @@ Producer 端可以通过 GZIP 或 Snappy 格式对消息集合进行压缩。Pro
 - Round Robin：会采用轮询的方式将当前所有的分区依次分配给所有的consumer；
 - Range：首先会计算每个consumer可以消费的分区个数，然后按照顺序将指定个数范围的分区分配给各个consumer；
 - Sticky：这种分区策略是最新版本中新增的一种策略，其主要实现了两个目的：将现有的分区尽可能均衡的分配给各个consumer，存在此目的的原因在于Round Robin和Range分配策略实际上都会导致某几个consumer承载过多的分区，从而导致消费压力不均衡；如果发生再平衡，那么重新分配之后在前一点的基础上会尽力保证当前未宕机的consumer所消费的分区不会被分配给其他的consumer上；
+
+# Kafka怎么保证消息不丢失
+TODO
+
+# Kafka怎么保证可用性
+TODO
