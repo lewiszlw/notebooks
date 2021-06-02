@@ -1,0 +1,6 @@
+# Tomcat实现不同应用（webapp）之间的类隔离
+对于每个webapp应用，都会对应唯一的StandContext，在StandContext中会引用WebappLoader，该类又会引用WebappClassLoader，WebappClassLoader就是真正加载webapp的classloader。
+
+Tomcat的解决方案是自定义一个类加载器WebAppClassLoader， 并且给每个Web应用创建一个类加载 器实例，Context容器组件对应一个Web应用，因此，每个Context容器负责创建和维护一个 WebAppClassLoader加载器实例。这背后的原理是，不同的加载器实例加载的类被认为是不同的类，即使 它们的类名相同。这就相当于在Java虚拟机内部创建了一个个相互隔离的Java类空间，每一个Web应用都有 自己的类空间，Web应用之间通过各自的类加载器互相隔离。
+
+WebAppClassLoader 打破了双亲委派机制，即它首先自己尝试去加载某个类，如果找不到再代理给父类加载器，其目的是优先加载Web应用定义的类。

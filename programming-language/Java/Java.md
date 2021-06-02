@@ -303,6 +303,65 @@ HashSet实际上就是HashMap，采用HashMap作为容器，key为元素，value
     
 ```
 
+# Lambda
+
+Java的lambda表达式实现上也就借助于invokedynamic命令（该字节码命令是为了支持动态语言特性而在Java7中新增的）。
+
+字节码中每一处含有invokeDynamic指令的位置都称为动态调用点，这条指令的第一个参数不再是代表方法调用符号引用的CONSTANT_Methodref_info常亮，而是变成为JDK7新加入的CONSTANT_InvokeDynamic_info常量，从这个新常量中可得到3项信息：引导方法（Bootstrap Method，此方法存放在新增的BootstrapMethods属性中）、方法类型和名称。引导方法是有固定的参数，并且返回值是java.lang.invoke.CallSite对象，这个代表真正要执行的目标方法调用。根据CONSTANT_InvokeDynamic_info常量中提供的信息，虚拟机可以找到并执行引导方法，从而获得一个CallSite对象，最终调用要执行的目标方法。
+
+匿名内部类
+```
+ArrayList<String> list = CollectionUtil.newArrayList("I", "love", "you");
+list.forEach(new Consumer<String>() {
+    @Override
+    public void accept(String s) {
+        System.out.println(s);
+    }
+});
+```
+匿名内部类的加载需要有加载、验证、准备、解析、初始化等过程，大量的内部类将会影响应用执行的性能，并消耗Metaspace。
+
+# Stream
+Stream中的操作可以分为两大类：中间操作与结束操作，中间操作只是对操作进行了记录，只有结束操作才会触发实际的计算（即惰性求值），这也是Stream在迭代大集合时高效的原因之一。
+
+Stream 常用的流操作包括：
+- 中间操作（Intermediate Operations）
+  - 无状态（Stateless）操作：每个数据的处理是独立的，不会影响或依赖之前的数据。如
+filter()、flatMap()、flatMapToDouble()、flatMapToInt()、flatMapToLong()、map()、mapToDouble()、mapToInt()、mapToLong()、peek()、unordered() 等
+  - 有状态（Stateful）操作：处理时会记录状态，比如处理了几个。后面元素的处理会依赖前面记录的状态，或者拿到所有元素才能继续下去。如
+distinct()、sorted()、sorted(comparator)、limit()、skip() 等
+- 终止操作（Terminal Operations）
+  - 非短路操作：处理完所有数据才能得到结果。如
+collect()、count()、forEach()、forEachOrdered()、max()、min()、reduce()、toArray()等。
+  - 短路（short-circuiting）操作：拿到符合预期的结果就会停下来，不一定会处理完所有数据。如
+anyMatch()、allMatch()、noneMatch()、findFirst()、findAny() 等。
+
+
+通俗来讲，应该采用某种方式记录用户每一步的操作，当用户调用结束操作时将之前记录的操作叠加到一起在一次迭代中全部执行掉。
+
+**记录操作**
+
+```
+Collection.stream()  ->  filter()  ->  map()  ->  sort()
+                   stage0        stage1     stage2      stage3
+```
+
+通过Collection.stream()方法得到Head也就是stage0，紧接着调用一系列的中间操作，不断产生新的Stream。这些Stream对象以双向链表的形式组织在一起，构成整个流水线，由于每个Stage都记录了前一个Stage和本次的操作以及回调函数，依靠这种结构就能建立起对数据源的所有操作。这就是Stream记录操作的方式。
+
+**操作叠加**
+
+通过Sink接口协调各个Stage。
+| 方法名 | 作用 |
+|-------|-----|
+| void begin(long size) | 开始遍历元素之前调用该方法，通知Sink做好准备 |
+| void end() | 所有元素遍历完成之后调用，通知Sink没有更多的元素了 |
+| boolean cancellationRequested() | 是否可以结束操作，可以让短路操作尽早结束 |
+| void accept(T t) | 遍历元素时调用，接受一个待处理元素，并对元素进行处理。Stage把自己包含的操作和回调方法封装到该方法里，前一个Stage只需要调用当前Stage.accept(T t)方法就行了 |
+
+当然对于有状态的操作，Sink的begin()和end()方法也是必须实现的。比如Stream.sorted()是一个有状态的中间操作，其对应的Sink.begin()方法可能创建一个乘放结果的容器，而accept()方法负责将元素添加到该容器，最后end()负责对容器进行排序。
+
+对于短路操作，Sink.cancellationRequested()也是必须实现的，比如Stream.findFirst()是短路操作，只要找到一个元素，cancellationRequested()就应该返回true，以便调用者尽快结束查找。
+
 # Java中的原子操作
 1. 除long和double之外的基本类型（int, byte, boolean, short, char, float）的赋值操作。
 2. 所有引用reference的赋值操作，不管是32位的机器还是64位的机器。
@@ -616,6 +675,8 @@ ReentrantReadWriteLock，适合读多写少，提高并发效率。
 # JUC总结
 ![JUC](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/java/JUC.png)
 
+### AQS
+TODO
 
 # 动态代理和静态代理
 动态代理类的源码是在程序运行期间由JVM根据反射等机制动态的生成，所以不存在代理类的字节码文件。代理类和委托类的关系是在程序运行时确定。
@@ -658,7 +719,7 @@ Java核心线程池的回收由allowCoreThreadTimeOut参数控制，默认为fal
 - shutdown 通知有序停止，先前提交的任务务会执行
 - shutdownNow 尝试立即停止，忽略队列里等待的任务，方法返回未执行过的tasks
 
-**线程执行任务runWorker方法**
+**FAQ：线程执行任务runWorker方法**
 
 ```
 /**
@@ -752,7 +813,7 @@ final void runWorker(Worker w) {
 }
 ```
 
-**线程执行任务抛出异常会怎样？**
+**FAQ：线程执行任务抛出异常会怎样？**
 
 线程池会把该线程销毁，并创建一个新线程到线程池中。
 
@@ -774,6 +835,93 @@ private void processWorkerExit(Worker w, boolean completedAbruptly) {
     xxx
 }
 ```
+
+**FAQ：线程池中的ctl变量作用**
+
+主要作用是记录线程池的生命周期状态和当前工作的线程数。通过巧妙的设计，将一个整型变量按二进制位分成两部分，分别表示两个信息。
+- 高3位是runState
+- 低29位是workerCount
+
+打包利用 \|（按位或），拆包利用 \&（按位与）和 \~（按位取反）来提高运算效率。
+
+```
+/**
+ * The main pool control state, ctl, is an atomic integer packing
+ * two conceptual fields
+ *   workerCount, indicating the effective number of threads
+ *   runState,    indicating whether running, shutting down etc
+ *
+ * In order to pack them into one int, we limit workerCount to
+ * (2^29)-1 (about 500 million) threads rather than (2^31)-1 (2
+ * billion) otherwise representable. If this is ever an issue in
+ * the future, the variable can be changed to be an AtomicLong,
+ * and the shift/mask constants below adjusted. But until the need
+ * arises, this code is a bit faster and simpler using an int.
+ *
+ * The workerCount is the number of workers that have been
+ * permitted to start and not permitted to stop.  The value may be
+ * transiently different from the actual number of live threads,
+ * for example when a ThreadFactory fails to create a thread when
+ * asked, and when exiting threads are still performing
+ * bookkeeping before terminating. The user-visible pool size is
+ * reported as the current size of the workers set.
+ *
+ * The runState provides the main lifecycle control, taking on values:
+ *
+ *   RUNNING:  Accept new tasks and process queued tasks
+ *   SHUTDOWN: Don't accept new tasks, but process queued tasks
+ *   STOP:     Don't accept new tasks, don't process queued tasks,
+ *             and interrupt in-progress tasks
+ *   TIDYING:  All tasks have terminated, workerCount is zero,
+ *             the thread transitioning to state TIDYING
+ *             will run the terminated() hook method
+ *   TERMINATED: terminated() has completed
+ *
+ * The numerical order among these values matters, to allow
+ * ordered comparisons. The runState monotonically increases over
+ * time, but need not hit each state. The transitions are:
+ *
+ * RUNNING -> SHUTDOWN
+ *    On invocation of shutdown(), perhaps implicitly in finalize()
+ * (RUNNING or SHUTDOWN) -> STOP
+ *    On invocation of shutdownNow()
+ * SHUTDOWN -> TIDYING
+ *    When both queue and pool are empty
+ * STOP -> TIDYING
+ *    When pool is empty
+ * TIDYING -> TERMINATED
+ *    When the terminated() hook method has completed
+ *
+ * Threads waiting in awaitTermination() will return when the
+ * state reaches TERMINATED.
+ *
+ * Detecting the transition from SHUTDOWN to TIDYING is less
+ * straightforward than you'd like because the queue may become
+ * empty after non-empty and vice versa during SHUTDOWN state, but
+ * we can only terminate if, after seeing that it is empty, we see
+ * that workerCount is 0 (which sometimes entails a recheck -- see
+ * below).
+ */
+private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+private static final int COUNT_BITS = Integer.SIZE - 3;
+private static final int CAPACITY   = (1 << COUNT_BITS) - 1;
+
+// runState is stored in the high-order bits
+private static final int RUNNING    = -1 << COUNT_BITS;
+private static final int SHUTDOWN   =  0 << COUNT_BITS;
+private static final int STOP       =  1 << COUNT_BITS;
+private static final int TIDYING    =  2 << COUNT_BITS;
+private static final int TERMINATED =  3 << COUNT_BITS;
+
+// Packing and unpacking ctl
+private static int runStateOf(int c)     { return c & ~CAPACITY; }
+private static int workerCountOf(int c)  { return c & CAPACITY; }
+private static int ctlOf(int rs, int wc) { return rs | wc; }
+```
+
+**FAQ：如果核心线程数为0，任务会先进入阻塞队列直至队列满后再创建非核心线程执行吗？**
+
+不会，如果线程池是Running状态并且
 
 ### ScheduledThreadPoolExecutor
 TODO
@@ -855,3 +1003,6 @@ JDK1.8引入。
 
 回调
 内部有线程池，当任务执行完后，更新任务执行状态，并触发注册的回调函数。
+
+Get方法
+如果执行结果为null（即未执行完），会不停循环等待。
