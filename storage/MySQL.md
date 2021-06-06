@@ -274,9 +274,9 @@ Serializable 隔离级别下 select 操作并会对当前记录加锁，select .
 - 不可重复读重点在于update和delete，而幻读的重点在于insert
 - 控制角度，不可重复读只需要锁住满足条件的记录，幻读要锁住满足条件及其相近的记录
 
-# MySQL 解决幻读问题
-1.MVCC
-2.next-key lock
+**FAQ: 如何解决幻读问题**
+1. MVCC
+2. next-key lock
 
 
 # 多版本并发控制（MVCC）
@@ -373,6 +373,25 @@ TODO
 - 聚簇索引的顺序就是数据的物理存储顺序，非聚簇索引的索引顺序与数据物理排列顺序无关。
 - 一个表最多一个聚簇索引，通常默认为主键索引。
 - 聚簇索引是稠密索引（每个搜索键值都有一个索引记录），非聚簇索引是稀疏索引（只为某些值建立索引 ）// TODO sure?
+
+# 联合索引
+
+如表T1有字段a、b、c、d、e，其中a是主键，除e为varchar其余为int类型，并创建了一个联合索引idx_t1_bcd(b,c,d)。
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/%E8%81%94%E5%90%88%E7%B4%A2%E5%BC%95_%E8%A1%A8T1.jpg)
+
+**存储结构**
+
+![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/storage/%E8%81%94%E5%90%88%E7%B4%A2%E5%BC%95%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.jpg)
+
+联合索引也是一颗B+树，只不过每个节点比单值索引多了几列。存储引擎会首先根据第一个索引列排序，如果第一列相等则再根据第二列排序，以此类推。
+
+**查找方式**
+
+如查找`select * from T1 where b = 12 and c = 14 and d = 3;`，存储引擎首先从根节点（一般常驻内存）开始查找，第一个索引的第一个索引列为1，12大于1，第二个索引的第一个索引列为56，12小于56，于是从这俩索引的中间读到下一个节点的磁盘文件地址，从磁盘上Load这个节点，通常伴随一次磁盘IO，然后在内存里去查找。当Load叶子节点的第二个节点时又是一次磁盘IO，比较第一个元素，b=12,c=14,d=3完全符合，于是找到该索引下的data元素即ID值，再从主键索引树上找到最终数据。
+
+
+
 # 最左匹配原则
 MySQL 在建立联合索引时会遵循最左前缀匹配的原则，即最左优先，在检索数据时从联合索引的最左边开始匹配。
 
