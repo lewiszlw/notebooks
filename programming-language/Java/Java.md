@@ -14,10 +14,10 @@
 
 # 字符和字符串
 
-## char型变量存贮一个中文汉字
+### char型变量存贮一个中文汉字
 Java中char类型是Unicode编码而非ASCII编码，一个char类型占2个字节（16位），所以可以存放汉子。而在C语言中则不行。
 
-## String、StringBuffer和StringBuilder的区别
+### String、StringBuffer和StringBuilder的区别
 1.是否重新equals
 
 String重写了equals方法，StringBuffer和StringBuilder没有重写equals方法。
@@ -45,7 +45,7 @@ String中的对象是不可变的，也就可以理解为常量，线程安全�
 
 # 异常处理
 
-## Error、Exception和RuntimeException的区别和作用
+### Error、Exception和RuntimeException的区别和作用
 
 1.Error和Exception区别：
 
@@ -67,11 +67,12 @@ Error类一般是指与虚拟机相关的问题，如系统崩溃，虚拟机错
 - @Document，表明该注解标记的元素可以被Javadoc 或类似的工具文档化
 - @Inherited，表明使用了@Inherited注解的注解，所标记的类的子类也会拥有这个注解
 
-# Reader和Inputstream区别
+# IO
+### Reader和Inputstream区别
 
 Reader用于读取字符流，InputStream用于读取字节流。Reader读取出来的是char数组或者String字符串，InputStream读取出来的是byte数组。
 
-# BIO、NIO和AIO区别
+### BIO、NIO和AIO区别
 **BIO**
 
 同步并阻塞，服务器实现模式为一个连接一个线程，即客户端有连接请求时服务器端就需要启动一个线程进行处理，如果这个连接不做任何事情会造成不必要的线程开销，当然可以通过线程池机制改善。
@@ -92,6 +93,18 @@ NIO方式适用于连接数目多且连接比较短（轻操作）的架构，�
 异步非阻塞，服务器实现模式为一个有效请求一个线程，客户端的I/O请求都是由OS先完成了再通知服务器应用去启动线程进行处理。
 
 AIO方式适用于连接数目多且连接比较长（重操作）的架构，比如相册服务器，充分调用OS参与并发操作，编程比较复杂，JDK7开始支持。
+
+# 集合
+### ArrayList、LinkedList和Vector
+
+- ArrayList和Vector底层基于数组实现，LinkedList底层基于双向链表实现
+- Vector是线程安全的，ArrayList和LinkedList不是线程安全
+- ArrayList和Vector更适合检索和末尾插入（数组特性），LinkedList更适合从中间插入或删除
+
+**FAQ：ArrayList扩容过程**
+
+如果利用无参构造函数初始化，初始elementData数组长度为0，只有在第一次add时才会扩大到`DEFAULT_CAPACITY = 10`。
+正常扩容时，容量会扩大为原来的1.5倍，利用Arrays.copyOf方法把原数组的内容放到更大容量的数组里面。
 
 # HashMap
 ### HashMap和Hashtable的区别

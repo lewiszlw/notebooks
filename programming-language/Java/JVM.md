@@ -163,3 +163,23 @@ JVM 类加载机制分为五个部分：加载，验证，准备，解析，初�
 # JDK命令行工具
 jmap,jstack,jstat,jinfo,jps
 TODO
+
+# Full GC 排查
+**可能原因**
+1. 程序执行了System.gc()
+2. 执行了jmap -histo:live pid命令，这个会立即触发fullgc
+3. 在执行Minor GC的时候进行的一系列检查
+  a.执行Minor GC的时候，JVM会检查老年代中最大连续可用空间是否大于了当前新生代所有对象的总大小
+  b.如果大于，则直接执行Minor GC（这个时候执行是没有风险的）
+  c.如果小于了，JVM会检查是否开启了空间分配担保机制，如果没有开启则直接改为执行Full GC
+  d.如果开启了，则JVM会检查老年代中最大连续可用空间是否大于了历次晋升到老年代中的平均大小，如果小于则执行改为执行Full GC 
+  e.如果大于则会执行Minor GC，如果Minor GC执行失败则会执行Full GC
+4. 使用了大对象，大对象会直接进入老年代
+5. 在程序中长期持有了对象的引用，对象年龄达到指定阈值也会进入老年代
+6. 程序中存在内存泄露，导致老年代内存缓慢增长，且无法被回收，达到了GC阈值
+
+**排查步骤**
+1. 通过JVM参数获取dump文件（-XX:HeapDumpBeforeFullGC）
+2. 通过JDK自带的工具jmap获取dump文件
+3. 通过JDK自带的jvisualvm工具分析或者下载三方软件jprofiler来分析dump文件即可
+4. 最重要的一点，要把fullgc发生时刻的dump文件和正常没有发生fullgc时间的dump文件都下载到本地，然后对比观察分析方便找到问题的原因
