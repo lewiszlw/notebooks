@@ -53,7 +53,9 @@ Producer 端可以通过 GZIP 或 Snappy 格式对消息集合进行压缩。Pro
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/middleware/Kafka%E9%9B%B6%E6%8B%B7%E8%B4%9D2.png)
 
 # Rebalance再平衡机制
-Rebalance 本质上是一种协议，规定了一个 Consumer Group 下的所有 Consumer 如何达成一致，来分配订阅 Topic 的每个分区。比如某个 Group 下有 20 个 Consumer 实例，它订阅了一个具有 100 个分区的 Topic。正常情况下，Kafka 平均会为每个 Consumer 分配 5 个分区。这个分配的过程就叫 Rebalance。
+Rebalance 本质上是一种协议，规定了一个 Consumer Group 下的所有 Consumer 如何达成一致，来分配订阅 Topic 的每个分区。
+
+比如某个 Group 下有 20 个 Consumer 实例，它订阅了一个具有 100 个分区的 Topic。正常情况下，Kafka 平均会为每个 Consumer 分配 5 个分区。这个分配的过程就叫 Rebalance。
 
 Rebalance 过程对 Consumer Group 消费过程有极 大的影响。会stop the world，简称 STW。我们知道在 STW 期间，所有应用线程都会停止工作，表现为 整个应用程序僵在那边一动不动。Rebalance 过程也和这个 类似，在 Rebalance 过程中，所有 Consumer 实例都会停 止消费，等待 Rebalance 完成。这是 Rebalance 为人诟病 的一个方面。
 

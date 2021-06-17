@@ -316,6 +316,11 @@ HashSet实际上就是HashMap，采用HashMap作为容器，key为元素，value
     
 ```
 
+TODO 如果key冲突？
+
+# ThreadLocal
+TODO
+
 # Lambda
 
 Java的lambda表达式实现上也就借助于invokedynamic命令（该字节码命令是为了支持动态语言特性而在Java7中新增的）。
