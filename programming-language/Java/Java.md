@@ -1024,3 +1024,10 @@ JDK1.8引入。
 
 Get方法
 如果执行结果为null（即未执行完），会不停循环等待。
+
+# JDK17 新特性
+### record
+### switch
+### ZGC
+### 模块化
+// TODO lwz
