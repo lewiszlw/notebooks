@@ -1,18 +1,18 @@
-#### wc: 统计文本中行数、字数、字符数
+### wc: 统计文本中行数、字数、字符数
 -l 统计行数 -c 统计字符数 
 `wc \<filename\>`
 `cat info.log \| grep "a" \| wc -l`
 
-#### scp: 远程文件拷贝
+### scp: 远程文件拷贝
 1.将本地文件复制到远程主机文件夹
 `scp local_file remote_username@remote_ip:remote_folder `
 2.将远程主机文件复制到本地文件夹
 `scp remote_username@remote_ip:remote_filepath local_folder`
 
-#### tcpdump
+### tcpdump: 网络抓包工具
 // TODO
 
-#### top: 实时显示进程和系统状态
+### top: 实时显示进程和系统状态
 ![top命令截图](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/linux/top%E5%91%BD%E4%BB%A4.png)
 
 第一行：概况
@@ -68,7 +68,7 @@
 每个进程的 CPU 占用率是进程在每个 CPU 核心上的占用率累加起来，即如果任务占用 200％ 的CPU，则它将占用两个内核。
 
 **2.如何计算机器的 CPU 利用率 和 Mem 使用率？**
-CPU 利用率 = 100 - `id`（第 3 行）
+CPU 利用率% = 100 - `id`（第 3 行）
 
 实际已用内存 = used - ( buffers + cache )
 实际可用内存 = free + buffers + cache
@@ -77,9 +77,10 @@ CPU 利用率 = 100 - `id`（第 3 行）
 
 内存可以使用 `free -h` 命令查看。
 
-
-#### ps
+### ps
 // TODO
 
-#### vmstat
+### vmstat
 // TODO
+
+### netstat
