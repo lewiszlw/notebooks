@@ -1,3 +1,4 @@
+# 常用命令
 ### wc: 统计文本中行数、字数、字符数
 -l 统计行数 -c 统计字符数 
 `wc \<filename\>`
@@ -84,3 +85,8 @@ CPU 利用率% = 100 - `id`（第 3 行）
 // TODO
 
 ### netstat
+
+
+# 常用命令组合
+### find /home/work/data -type f | grep -v "d246c\|6e922\" | xargs rm
+查找 /home/work/data 目录下所有文件（非目录），当其 filepath 不包含 d246c 或 6e922 字符串时，进行删除操作。
