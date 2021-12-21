@@ -90,3 +90,6 @@ CPU 利用率% = 100 - `id`（第 3 行）
 # 常用命令组合
 ### find /home/work/data -type f | grep -v "d246c\|6e922\" | xargs rm
 查找 /home/work/data 目录下所有文件（非目录），当其 filepath 不包含 d246c 或 6e922 字符串时，进行删除操作。
+
+### find / -type l | xargs ls -l | grep "\-> liblua-5.1.so"
+查找根目录下所有指向 liblua-5.1.so 的软链接。
