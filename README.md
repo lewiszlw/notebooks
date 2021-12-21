@@ -22,6 +22,7 @@ Gitbook 地址：https://lewiszlw.gitbook.io/notebooks/
 - [算法与数据结构](https://github.com/lewiszlw/notebooks/tree/master/cs-basic-knowledge)
 
 ## programming-language - 编程语言
+Java
 - [Java](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java)
 - [JVM](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java)
 - [Spring](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java)
@@ -32,6 +33,7 @@ Gitbook 地址：https://lewiszlw.gitbook.io/notebooks/
 - [Tomcat](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java)
 - [JMockit](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Java)
 
+Python
 - [Python](https://github.com/lewiszlw/notebooks/tree/master/programming-language/Python)
 
 ## distributed-knowledge - 分布式知识
