@@ -46,12 +46,12 @@ Python
 - [Thrift](https://github.com/lewiszlw/notebooks/tree/master/middleware/)
 - [Kafka](https://github.com/lewiszlw/notebooks/tree/master/middleware/)
 
-## storage & databases - 存储与数据库
-- [MySQL](https://github.com/lewiszlw/notebooks/tree/master/storage-database)
-- [NoSQL](https://github.com/lewiszlw/notebooks/tree/master/storage-database)
-- [Redis](https://github.com/lewiszlw/notebooks/tree/master/storage-database)
-- [Guava Cache](https://github.com/lewiszlw/notebooks/tree/master/storage-database)
-- [Elasticsearch](https://github.com/lewiszlw/notebooks/tree/master/storage-database)
+## datastore - 数据存储
+- [MySQL](https://github.com/lewiszlw/notebooks/tree/master/datastore)
+- [NoSQL](https://github.com/lewiszlw/notebooks/tree/master/datastore)
+- [Redis](https://github.com/lewiszlw/notebooks/tree/master/datastore)
+- [Guava Cache](https://github.com/lewiszlw/notebooks/tree/master/datastore)
+- [Elasticsearch](https://github.com/lewiszlw/notebooks/tree/master/datastore)
 
 ## 运维
 - [运维知识](https://github.com/lewiszlw/notebooks/tree/master/devops)
