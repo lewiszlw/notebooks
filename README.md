@@ -1,7 +1,11 @@
 # notebooks
 限于本人水平有限，内容如有错误或不足之处，还请多多指出~
 
-Gitbook 地址：https://lewiszlw.gitbook.io/notebooks/
+- Github 地址：https://github.com/lewiszlw/notebooks
+- Gitbook 地址：https://lewiszlw.gitbook.io/notebooks/
+
+## working - 工作
+- [文档模板](https://github.com/lewiszlw/notebooks/blob/master/working)（问题复盘、服务介绍）
 
 ## blogs - 博客文章
 - [博客](https://github.com/lewiszlw/notebooks/tree/master/blogs)
