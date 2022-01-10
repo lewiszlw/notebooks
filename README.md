@@ -6,7 +6,7 @@
 
 ## working - 工作
 - [文档模板](https://github.com/lewiszlw/notebooks/blob/master/working/doc-template)（问题复盘、服务介绍、技术方案等）
-- [工作流程](https://github.com/lewiszlw/notebooks/blob/master/working/process)（oncall）
+- [工作流程](https://github.com/lewiszlw/notebooks/blob/master/working/process)（oncall、领域负责人分工备份）
 
 ## blogs - 博客文章
 - [博客](https://github.com/lewiszlw/notebooks/tree/master/blogs)
