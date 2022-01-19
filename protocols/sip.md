@@ -1,5 +1,5 @@
 # SIP 协议简介
-会话发起协议（Session Initiation Protocol，缩写SIP）是一个由IETF MMUSIC工作组开发的协议，作为标准被提议用于创建，修改和终止包括视频，语音，即时通信，在线游戏和虚拟现实等多种多媒体元素在内的交互式用户会话。2000年11月，SIP被正式批准成为3GPP信号协议之一，并成为IMS体系结构的一个永久单元。SIP与H.323一样，是用于VoIP最主要的信令协议之一。
+会话发起协议（Session Initiation Protocol，缩写SIP）是一个由IETF MMUSIC工作组开发的协议，作为标准被提议用于创建，修改和终止包括视频、语音、即时通信、在线游戏和虚拟现实等多种多媒体元素在内的交互式用户会话。2000年11月，SIP被正式批准成为3GPP信号协议之一，并成为IMS体系结构的一个永久单元。SIP与H.323一样，是用于VoIP最主要的信令协议之一。
 
 # SIP 网络单元
 - **用户代理（User Agent）**：SIP用户代理是一个SIP逻辑网络端点，用于创建、发送、接收SIP消息并管理一个SIP会话。SIP用户代理又可分为用户代理客户端UAC（User Agent Client）和用户代理服务端UAS（User Agent Server）。UAC创建并发送SIP请求，UAS接收处理SIP请求，发送SIP响应。
@@ -9,10 +9,12 @@
 
 # SIP 消息的两种会话模式
 - Session Model：会话中，对于消息体内容大于1300字节时，一般采用Session Model
-- Pager Model：在Sip消息中，对于消息体不大于1300字节时，一般采用Pager Model
+- Pager Model：在SIP消息中，对于消息体不大于1300字节时，一般采用Pager Model
 
 # Session Model
 ![Session Model 会话流程](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/protocol/SIP-SessionModel%E4%BC%9A%E8%AF%9D%E6%B5%81%E7%A8%8B.png)
+
+整个流程称之为一个 Dialog。
 
 以拨打AXE模式隐私号为例
 ![Session Mode 数据包发送流程](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/protocol/SIP-SessionModel%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
@@ -31,6 +33,7 @@
 
 # Pager Model
 在SIP消息中，对于消息体不大于1300字节时，一般采用Pager Model。SIP消息通信中采用MESSAGE方法，MESSAGE方法本身并不建立Dialog，在多数应用中，每条IM消息都是独立的。
+
 ![Pager Model 会话流程](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/protocol/SIP-PagerModel%E4%BC%9A%E8%AF%9D%E6%B5%81%E7%A8%8B.png)
 
 # SIP 消息
