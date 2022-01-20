@@ -81,9 +81,23 @@ CPU 利用率% = 100 - `id`（第 3 行）
 
 ### ps
 // TODO
+```
+ps -ef | grep {关键字}
+```
 
 ### vmstat
 // TODO
+
+### lsof: 列出当前系统打开文件
+```
+查看端口占用情况
+lsof -i:{port}
+```
+
+```
+通过某个进程号显示该进行打开的文件
+lsof -p {pid}
+```
 
 ### netstat
 
