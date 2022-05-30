@@ -164,6 +164,22 @@ TODO
 1. 避免重复加载
 2. 保证java核心库安全的性
 
+### 遇到的问题
+1.类延迟加载导致代码部署后未立刻执行
+```
+static {
+    pool.scheduleAtFixedRate(() -> {
+        try {
+            // 刷新配置
+            configs = refreshConfigs();
+        } catch (Exception e) {
+            log.error("xxx", e);
+        }
+    }, 10, 120, TimeUnit.SECONDS);
+}
+```
+static代码块延迟加载导致 静态变量configs 没有在第一时间初始化，等到所在的类被引用时才会初始化并启动定时任务。
+
 # JDK命令行工具
 jmap,jstack,jstat,jinfo,jps
 TODO
