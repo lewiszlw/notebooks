@@ -44,19 +44,19 @@ Python
 ## distributed-knowledge - 分布式知识
 - [分布式知识](https://github.com/lewiszlw/notebooks/tree/master/distributed-knowledge)
 
-## middleware - 中间件
-- [消息中间件](https://github.com/lewiszlw/notebooks/tree/master/middleware/)
-- [RPC框架](https://github.com/lewiszlw/notebooks/tree/master/middleware/)
-- [Dubbo](https://github.com/lewiszlw/notebooks/tree/master/middleware/)
-- [Thrift](https://github.com/lewiszlw/notebooks/tree/master/middleware/)
-- [Kafka](https://github.com/lewiszlw/notebooks/tree/master/middleware/)
+## communication - 通信
+- [消息中间件](https://github.com/lewiszlw/notebooks/tree/master/communication/)
+- [RPC框架](https://github.com/lewiszlw/notebooks/tree/master/communication/)
+- [Dubbo](https://github.com/lewiszlw/notebooks/tree/master/communication/)
+- [Thrift](https://github.com/lewiszlw/notebooks/tree/master/communication/)
+- [Kafka](https://github.com/lewiszlw/notebooks/tree/master/communication/)
 
-## datastore - 数据存储
-- [MySQL](https://github.com/lewiszlw/notebooks/tree/master/datastore)
-- [NoSQL](https://github.com/lewiszlw/notebooks/tree/master/datastore)
-- [Redis](https://github.com/lewiszlw/notebooks/tree/master/datastore)
-- [Guava Cache](https://github.com/lewiszlw/notebooks/tree/master/datastore)
-- [Elasticsearch](https://github.com/lewiszlw/notebooks/tree/master/datastore)
+## storage - 存储
+- [MySQL](https://github.com/lewiszlw/notebooks/tree/master/storage)
+- [NoSQL](https://github.com/lewiszlw/notebooks/tree/master/storage)
+- [Redis](https://github.com/lewiszlw/notebooks/tree/master/storage)
+- [Guava Cache](https://github.com/lewiszlw/notebooks/tree/master/storage)
+- [Elasticsearch](https://github.com/lewiszlw/notebooks/tree/master/storage)
 
 ## devops - 运维
 - [运维知识](https://github.com/lewiszlw/notebooks/tree/master/devops)
