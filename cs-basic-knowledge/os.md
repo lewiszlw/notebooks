@@ -137,6 +137,9 @@
 多路复用 IO 为何比非阻塞 IO 模型的效率高
 是因为在非阻塞 IO 中，不断地询问 socket 状态时通过用户线程去进行的，而在多路复用 IO 中，轮询每个 socket 状态是内核在进行的，这个效率要比用户线程要高的多。
 
+poll、epoll
+TODO
+
 **4.信号驱动 IO 模型**
 
 ![image](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/linux/Unix%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8IO%E6%A8%A1%E5%9E%8B.jpeg)

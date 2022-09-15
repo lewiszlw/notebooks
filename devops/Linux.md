@@ -12,7 +12,7 @@
 
 ### tcpdump: 网络抓包工具
 // TODO
-`tcpdump -i eth0 -w dump2.pcap` 监听 eth0 端口，获取抓包文件。用Wireshark打开抓包文件进行分析。
+`tcpdump -i eth0 -w dump.pcap` 监听 eth0 端口，获取抓包文件。用Wireshark打开抓包文件进行分析。
 
 ### top: 实时显示进程和系统状态
 ![top命令截图](https://raw.githubusercontent.com/lewiszlw/notebooks/master/assets/linux/top%E5%91%BD%E4%BB%A4.png)
@@ -100,7 +100,7 @@ lsof -p {pid}
 ```
 
 ### netstat
-
+// TODO
 
 # 常用命令组合
 ### find /home/work/data -type f | grep -v "d246c\|6e922\" | xargs rm

@@ -160,3 +160,7 @@ a=direction:both
 - Contact：包含源的URI信息，用来给响应方直接和源建立连接用
 - Content-Type：指明消息体的类型（SDP会话描述协议）
 - Content-Length：指明消息体的字节大小
+
+# SDP
+https://leaderli.github.io/2020/09/04/sip/
+// TODO
